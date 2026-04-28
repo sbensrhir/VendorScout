@@ -1,85 +1,664 @@
-VENDORSCOUT · AUSTRALIAN BEAUTY MARKET
-Road to $100K
-Revenue tracker · May → December 2025
-PRIMARY DEADLINE
-June 6 · 3 clients
-CASH RECEIVED
-$0
-Real money in account
-CONTRACTS SIGNED
-$0
-Pipeline committed
-GAP TO $100K
-$100,000
-Based on cash received
-CLIENTS TRACKED
-1
-Target: 6–8 by Dec
-Show scenario:
-All
-Conservative
-Base case
-Optimistic
-Cumulative revenue · May → December 2025
-Hover any point for figures · Blue = cash received · Purple = contracts signed
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorScout — Road to $100K</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --navy:#1C2B3A; --navy-lt:rgba(28,43,58,0.06);
+  --gold:#C8A97A; --gold-lt:#F3ECD9;
+  --sand:#F8F5F0; --white:#FAFAF8;
+  --muted:#777068; --border:#DDD8CE; --ink:#0F0F0F;
+  --gray:#888780; --gray-lt:#F1EFE8;
+  --amber:#BA7517; --amber-lt:#FFF8F0;
+  --green:#3B6D11; --green-lt:#EAF3DE; --green-dk:#27500A;
+  --red:#A32D2D; --red-lt:#FAECE7; --red-md:#E24B4A;
+  --blue:#185FA5; --blue-lt:#EBF0F5;
+  --purple:#5B3D8A; --purple-lt:#F0EBF8;
+  --teal:#0F6E56; --teal-lt:#E1F5EE;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;font-weight:300;background:var(--sand);color:var(--ink);min-height:100vh;padding:24px 16px 64px;}
+.page{max-width:900px;margin:0 auto;}
 
-Conservative
+/* HEADER */
+.header{background:var(--navy);border-radius:14px;padding:24px 28px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;}
+.eyebrow{font-size:10px;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+.header h1{font-size:24px;font-weight:500;color:#fff;line-height:1.2;}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px;}
+.deadline-badge{background:rgba(200,169,122,0.12);border:1px solid rgba(200,169,122,0.25);border-radius:40px;padding:8px 16px;text-align:center;}
+.deadline-badge .d-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:2px;}
+.deadline-badge .d-date{font-size:14px;font-weight:500;color:var(--gold);}
 
-Base case
+/* ALERT BANNER */
+.alert-banner{display:none;align-items:center;gap:12px;background:var(--red-lt);border:1px solid rgba(163,45,45,0.25);border-radius:10px;padding:12px 18px;margin-bottom:14px;}
+.alert-banner.show{display:flex;}
+.alert-icon{font-size:16px;}
+.alert-text{font-size:13px;color:var(--red);font-weight:400;}
+.alert-text strong{font-weight:500;}
 
-Optimistic
+/* STATUS BAR */
+.status-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.stat{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:13px 15px;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;}
+.stat.s-actual::before{background:var(--blue);}
+.stat.s-signed::before{background:var(--purple);}
+.stat.s-gap::before{background:var(--amber);}
+.stat.s-clients::before{background:var(--teal);}
+.stat-label{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.stat-val{font-size:20px;font-weight:500;color:var(--ink);font-family:'DM Mono',monospace;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.stat-val.warning{color:var(--red-md);}
+.stat-val.ok{color:var(--green);}
 
-Cash received
+/* SCENARIO TOGGLE */
+.scenario-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.scenario-label{font-size:12px;color:var(--muted);margin-right:4px;}
+.scenario-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 16px;border-radius:20px;border:0.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.scenario-btn:hover{border-color:var(--amber);color:var(--amber);}
+.scenario-btn.active.cons{background:var(--gray-lt);border-color:var(--gray);color:#444441;}
+.scenario-btn.active.base{background:var(--amber-lt);border-color:var(--amber);color:var(--amber);}
+.scenario-btn.active.opti{background:var(--green-lt);border-color:var(--green);color:var(--green-dk);}
+.scenario-btn.active.all{background:var(--navy);border-color:var(--navy);color:var(--gold);}
 
-Contracts signed
+/* CHART CARD */
+.chart-card{background:var(--white);border:0.5px solid var(--border);border-radius:14px;padding:24px 24px 20px;margin-bottom:14px;}
+.chart-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.chart-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:2px;}
+.chart-desc{font-size:11px;color:var(--muted);}
+.legend{display:flex;flex-wrap:wrap;gap:12px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-line{width:22px;height:3px;border-radius:2px;flex-shrink:0;}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.leg-dashed{width:22px;height:0;border-top:2px dashed var(--red);flex-shrink:0;}
 
-$100K
-Cumulative revenue
-By client
-Conservative: $63,700. Base case: $100,700. Optimistic: $135,700.
-Monthly actuals — update every Friday
-Enter cumulative totals (not monthly amounts). Add notes on what happened: which client, which stage, what was invoiced.
-Update chart Clear actuals Chart updated
-Client tracker
-Track each client's contracted value and cash received. Feeds into the "by client" chart.
-+ Add client
-Milestone tracker
-JUN 6
+/* CHART TABS */
+.chart-tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border);margin-bottom:16px;}
+.chart-tab{font-size:12px;font-weight:400;color:var(--muted);padding:7px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:all 0.15s;}
+.chart-tab:hover{color:var(--ink);}
+.chart-tab.active{color:var(--ink);font-weight:500;border-bottom-color:var(--navy);}
 
-2–3 signed clients · MaxiBlock + 1–2 more
-First invoice: ~$3,000 (Stage 1 audit) · Leave for vacation
-$3K+
-JUL
+.chart-wrap{position:relative;width:100%;height:300px;}
 
-Raise to Tier 2 pricing · $18K full engagement
-Stage 2 invoice from MaxiBlock · Close 1 new client at new price
-~$18K
-AUG
+/* CLIENT STACKED */
+.client-chart-wrap{position:relative;width:100%;height:300px;}
 
-First retainer client · $2,500/mo passive
-Cumulative target: $40K+ to stay on track for $100K
-~$40K
-OCT
+/* INPUT SECTION */
+.input-section{background:var(--white);border:0.5px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:14px;}
+.section-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.section-desc{font-size:11px;color:var(--muted);margin-bottom:16px;}
 
-Last real checkpoint · $60K or $100K is off the table
-If below $60K cumulative — adjust strategy immediately
-~$60K
-DEC
+/* MONTHLY INPUT GRID */
+.month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.month-block{background:var(--sand);border-radius:10px;padding:12px 12px 10px;}
+.month-block .m-label{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.month-block input{width:100%;font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);background:var(--white);border:0.5px solid var(--border);border-radius:7px;padding:7px 10px;outline:none;transition:border-color 0.15s;margin-bottom:6px;}
+.month-block input:focus{border-color:var(--blue);}
+.month-block input::placeholder{color:#BBBAB5;}
+.month-block textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);background:var(--white);border:0.5px solid var(--border);border-radius:7px;padding:6px 10px;outline:none;resize:none;height:52px;line-height:1.5;transition:border-color 0.15s;}
+.month-block textarea:focus{border-color:var(--blue);}
+.month-block textarea::placeholder{color:#BBBAB5;}
+.m-sublabel{font-size:9px;color:var(--muted);margin-bottom:3px;letter-spacing:0.05em;}
 
-Year-end target · $100K AUD
-6–8 clients total · 2+ on retainer · Tier 2–3 pricing dominant
-$100K
-STRATEGIC VERDICT
-REAL TARGET
-Plan for $60K, push hard for $100K
-KEY LEVER #1
-Raise to Tier 2 ($18K) after MaxiBlock
-KEY LEVER #2
-Convert clients to retainers · $2.5–4K/mo
-BIGGEST RISK
-Slow sales cycle — post → call → close fast
-CLIENTS NEEDED
-6–8 clients total by December
-FILTER RULE
-Every idea vs June 6 goal first
-Last updated: never
+/* CLIENT TRACKER */
+.client-section{background:var(--white);border:0.5px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:14px;}
+.client-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+.client-card{background:var(--sand);border-radius:10px;padding:12px 14px;}
+.client-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+.client-row input{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink);background:var(--white);border:0.5px solid var(--border);border-radius:6px;padding:6px 9px;outline:none;flex:1;min-width:0;}
+.client-row input:focus{border-color:var(--blue);}
+.client-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.client-sub-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.client-sub-row input{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);background:var(--white);border:0.5px solid var(--border);border-radius:6px;padding:6px 9px;outline:none;width:100%;}
+.client-sub-row input:focus{border-color:var(--blue);}
+.client-sublabel{font-size:9px;color:var(--muted);margin-bottom:2px;letter-spacing:0.05em;text-transform:uppercase;}
+
+/* BUTTONS */
+.btn-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--navy);color:var(--gold);border:none;border-radius:8px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
+.btn-primary:hover{opacity:0.85;}
+.btn-primary:active{transform:scale(0.98);}
+.btn-secondary{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--muted);border:0.5px solid var(--border);border-radius:8px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.15s;}
+.btn-secondary:hover{border-color:var(--ink);color:var(--ink);}
+.updated-msg{font-size:12px;color:var(--green);opacity:0;transition:opacity 0.3s;display:flex;align-items:center;gap:5px;}
+.updated-msg.show{opacity:1;}
+
+/* ADD CLIENT BTN */
+.add-client-btn{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);background:transparent;border:0.5px dashed var(--border);border-radius:8px;padding:8px 14px;cursor:pointer;transition:all 0.15s;width:100%;}
+.add-client-btn:hover{border-color:var(--navy);color:var(--navy);}
+
+/* MILESTONES */
+.milestone-section{background:var(--white);border:0.5px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:14px;}
+.milestone{display:flex;align-items:flex-start;gap:14px;padding:11px 0;border-bottom:0.5px solid var(--border);}
+.milestone:last-child{border-bottom:none;}
+.ms-month{font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);width:34px;flex-shrink:0;padding-top:2px;}
+.ms-track{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0;}
+.ms-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--white);transition:all 0.3s;flex-shrink:0;}
+.ms-dot.done{background:var(--green);border-color:var(--green);}
+.ms-dot.current{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-lt);}
+.ms-content{flex:1;min-width:0;}
+.ms-title{font-size:13px;font-weight:400;color:var(--ink);line-height:1.4;}
+.ms-title strong{font-weight:500;}
+.ms-note{font-size:11px;color:var(--muted);margin-top:2px;}
+.ms-amount{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--muted);flex-shrink:0;padding-top:2px;}
+.ms-amount.hit{color:var(--green-dk);}
+
+/* VERDICT */
+.verdict-card{background:var(--navy);border-radius:14px;padding:22px 24px;margin-bottom:14px;}
+.verdict-eyebrow{font-size:10px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+.verdict-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.verdict-item{background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:13px 15px;}
+.verdict-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:5px;}
+.verdict-val{font-size:13px;font-weight:400;color:#fff;line-height:1.45;}
+.verdict-val .hi{color:var(--gold);font-weight:500;}
+.last-updated{text-align:right;font-size:10px;color:rgba(255,255,255,0.2);margin-top:14px;font-family:'DM Mono',monospace;}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  body{padding:16px 12px 48px;}
+  .status-bar{grid-template-columns:1fr 1fr;}
+  .month-grid{grid-template-columns:1fr 1fr;}
+  .client-grid{grid-template-columns:1fr;}
+  .verdict-grid{grid-template-columns:1fr 1fr;}
+  .header{padding:18px 18px;}
+  .header h1{font-size:20px;}
+  .chart-card,.input-section,.client-section,.milestone-section,.verdict-card{padding:16px 16px;}
+}
+@media(max-width:400px){
+  .status-bar{grid-template-columns:1fr 1fr;}
+  .month-grid{grid-template-columns:1fr 1fr;}
+  .verdict-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="eyebrow">VendorScout · Australian Beauty Market</div>
+    <h1>Road to $100K</h1>
+    <div class="header-sub">Revenue tracker · May → December 2025</div>
+  </div>
+  <div class="deadline-badge">
+    <div class="d-label">Primary deadline</div>
+    <div class="d-date">June 6 · 3 clients</div>
+  </div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alertBanner">
+  <span class="alert-icon">⚠</span>
+  <div class="alert-text"><strong>Behind target.</strong> Your actuals are tracking below the base case. You need to accelerate outreach or close a client faster.</div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="stat s-actual">
+    <div class="stat-label">Cash received</div>
+    <div class="stat-val" id="statActual">$0</div>
+    <div class="stat-sub">Real money in account</div>
+  </div>
+  <div class="stat s-signed">
+    <div class="stat-label">Contracts signed</div>
+    <div class="stat-val" id="statSigned">$0</div>
+    <div class="stat-sub">Pipeline committed</div>
+  </div>
+  <div class="stat s-gap">
+    <div class="stat-label">Gap to $100K</div>
+    <div class="stat-val" id="statGap">$100,000</div>
+    <div class="stat-sub" id="statGapSub">Based on cash received</div>
+  </div>
+  <div class="stat s-clients">
+    <div class="stat-label">Clients tracked</div>
+    <div class="stat-val" id="statClients">1</div>
+    <div class="stat-sub">Target: 6–8 by Dec</div>
+  </div>
+</div>
+
+<!-- SCENARIO TOGGLE -->
+<div class="scenario-row">
+  <span class="scenario-label">Show scenario:</span>
+  <button class="scenario-btn active all" onclick="setScenario('all',this)">All</button>
+  <button class="scenario-btn cons" onclick="setScenario('cons',this)">Conservative</button>
+  <button class="scenario-btn base" onclick="setScenario('base',this)">Base case</button>
+  <button class="scenario-btn opti" onclick="setScenario('opti',this)">Optimistic</button>
+</div>
+
+<!-- MAIN CHART -->
+<div class="chart-card">
+  <div class="chart-top">
+    <div>
+      <div class="chart-title">Cumulative revenue · May → December 2025</div>
+      <div class="chart-desc">Hover any point for figures · Blue = cash received · Purple = contracts signed</div>
+    </div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-line" style="background:var(--gray)"></div>Conservative</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--amber)"></div>Base case</div>
+      <div class="leg-item"><div class="leg-line" style="background:var(--green)"></div>Optimistic</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--blue)"></div>Cash received</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--purple)"></div>Contracts signed</div>
+      <div class="leg-item"><div class="leg-dashed"></div>$100K</div>
+    </div>
+  </div>
+
+  <!-- CHART TABS -->
+  <div class="chart-tabs">
+    <div class="chart-tab active" onclick="switchChart('cumulative',this)">Cumulative revenue</div>
+    <div class="chart-tab" onclick="switchChart('clients',this)">By client</div>
+  </div>
+
+  <div class="chart-wrap" id="cumulativeChart">
+    <canvas id="revenueChart" role="img" aria-label="Cumulative revenue chart showing scenarios and actuals from May to December 2025">Conservative: $63,700. Base case: $100,700. Optimistic: $135,700.</canvas>
+  </div>
+  <div class="client-chart-wrap" id="clientChart" style="display:none;">
+    <canvas id="clientBarChart" role="img" aria-label="Revenue breakdown by client per month">Revenue stacked by client per month.</canvas>
+  </div>
+</div>
+
+<!-- MONTHLY ACTUALS INPUT -->
+<div class="input-section">
+  <div class="section-title">Monthly actuals — update every Friday</div>
+  <div class="section-desc">Enter cumulative totals (not monthly amounts). Add notes on what happened: which client, which stage, what was invoiced.</div>
+  <div class="month-grid" id="monthGrid"></div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="updateAll()">Update chart</button>
+    <button class="btn-secondary" onclick="clearActuals()">Clear actuals</button>
+    <span class="updated-msg" id="updatedMsg">Chart updated</span>
+  </div>
+</div>
+
+<!-- CLIENT TRACKER -->
+<div class="client-section">
+  <div class="section-title" style="margin-bottom:3px;">Client tracker</div>
+  <div class="section-desc">Track each client's contracted value and cash received. Feeds into the "by client" chart.</div>
+  <div class="client-grid" id="clientGrid"></div>
+  <button class="add-client-btn" onclick="addClient()">+ Add client</button>
+</div>
+
+<!-- MILESTONES -->
+<div class="milestone-section">
+  <div class="section-title" style="margin-bottom:14px;">Milestone tracker</div>
+  <div id="milestoneList">
+    <div class="milestone">
+      <div class="ms-month">Jun 6</div>
+      <div class="ms-track"><div class="ms-dot current"></div></div>
+      <div class="ms-content">
+        <div class="ms-title"><strong>2–3 signed clients</strong> · MaxiBlock + 1–2 more</div>
+        <div class="ms-note">First invoice: ~$3,000 (Stage 1 audit) · Leave for vacation</div>
+      </div>
+      <div class="ms-amount">$3K+</div>
+    </div>
+    <div class="milestone">
+      <div class="ms-month">Jul</div>
+      <div class="ms-track"><div class="ms-dot"></div></div>
+      <div class="ms-content">
+        <div class="ms-title"><strong>Raise to Tier 2 pricing</strong> · $18K full engagement</div>
+        <div class="ms-note">Stage 2 invoice from MaxiBlock · Close 1 new client at new price</div>
+      </div>
+      <div class="ms-amount">~$18K</div>
+    </div>
+    <div class="milestone">
+      <div class="ms-month">Aug</div>
+      <div class="ms-track"><div class="ms-dot"></div></div>
+      <div class="ms-content">
+        <div class="ms-title"><strong>First retainer client</strong> · $2,500/mo passive</div>
+        <div class="ms-note">Cumulative target: $40K+ to stay on track for $100K</div>
+      </div>
+      <div class="ms-amount">~$40K</div>
+    </div>
+    <div class="milestone">
+      <div class="ms-month">Oct</div>
+      <div class="ms-track"><div class="ms-dot"></div></div>
+      <div class="ms-content">
+        <div class="ms-title"><strong>Last real checkpoint</strong> · $60K or $100K is off the table</div>
+        <div class="ms-note">If below $60K cumulative — adjust strategy immediately</div>
+      </div>
+      <div class="ms-amount">~$60K</div>
+    </div>
+    <div class="milestone">
+      <div class="ms-month">Dec</div>
+      <div class="ms-track"><div class="ms-dot"></div></div>
+      <div class="ms-content">
+        <div class="ms-title"><strong>Year-end target · $100K AUD</strong></div>
+        <div class="ms-note">6–8 clients total · 2+ on retainer · Tier 2–3 pricing dominant</div>
+      </div>
+      <div class="ms-amount hit">$100K</div>
+    </div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="verdict-card">
+  <div class="verdict-eyebrow">Strategic verdict</div>
+  <div class="verdict-grid">
+    <div class="verdict-item"><div class="verdict-label">Real target</div><div class="verdict-val">Plan for <span class="hi">$60K</span>, push hard for $100K</div></div>
+    <div class="verdict-item"><div class="verdict-label">Key lever #1</div><div class="verdict-val">Raise to <span class="hi">Tier 2 ($18K)</span> after MaxiBlock</div></div>
+    <div class="verdict-item"><div class="verdict-label">Key lever #2</div><div class="verdict-val">Convert clients to <span class="hi">retainers</span> · $2.5–4K/mo</div></div>
+    <div class="verdict-item"><div class="verdict-label">Biggest risk</div><div class="verdict-val">Slow sales cycle — <span class="hi">post → call → close fast</span></div></div>
+    <div class="verdict-item"><div class="verdict-label">Clients needed</div><div class="verdict-val"><span class="hi">6–8 clients</span> total by December</div></div>
+    <div class="verdict-item"><div class="verdict-label">Filter rule</div><div class="verdict-val">Every idea vs <span class="hi">June 6 goal first</span></div></div>
+  </div>
+  <div class="last-updated" id="lastUpdated">Last updated: never</div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+const MONTHS = ['May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CLIENT_COLORS = ['#185FA5','#3B6D11','#BA7517','#5B3D8A','#0F6E56','#A32D2D','#888780','#C8882A'];
+
+const scenarioMonthly = {
+  cons: [0,13700,5000,10000,5000,15000,5000,10000],
+  base: [0,13700,8000,15000,12000,18000,14000,20000],
+  opti: [0,13700,12000,20000,18000,25000,22000,25000],
+};
+
+function cumulative(arr){let s=0;return arr.map(v=>{s+=(v||0);return Math.round(s);});}
+const cumCons=cumulative(scenarioMonthly.cons);
+const cumBase=cumulative(scenarioMonthly.base);
+const cumOpt=cumulative(scenarioMonthly.opti);
+
+// State
+let actualsCash   = Array(8).fill(null);
+let actualsSigned = Array(8).fill(null);
+let actualNotes   = Array(8).fill('');
+let activeScenario = 'all';
+let clients = [
+  {name:'MaxiBlock',contracted:13700,received:0,color:CLIENT_COLORS[0]},
+];
+
+// BUILD MONTH GRID
+function buildMonthGrid(){
+  const g=document.getElementById('monthGrid');
+  g.innerHTML='';
+  MONTHS.forEach((m,i)=>{
+    const block=document.createElement('div');
+    block.className='month-block';
+    block.innerHTML=`
+      <div class="m-label">${m}</div>
+      <div class="m-sublabel">Cash received ($)</div>
+      <input type="number" id="cash-${i}" placeholder="0" min="0" value="${actualsCash[i]!==null?actualsCash[i]:''}" onkeydown="if(event.key==='Enter')updateAll()">
+      <div class="m-sublabel">Contracts signed ($)</div>
+      <input type="number" id="signed-${i}" placeholder="0" min="0" value="${actualsSigned[i]!==null?actualsSigned[i]:''}" onkeydown="if(event.key==='Enter')updateAll()">
+      <div class="m-sublabel">Notes</div>
+      <textarea id="note-${i}" placeholder="e.g. MaxiBlock Stage 1 invoiced">${actualNotes[i]}</textarea>
+    `;
+    g.appendChild(block);
+  });
+}
+
+// BUILD CLIENT GRID
+function buildClientGrid(){
+  const g=document.getElementById('clientGrid');
+  g.innerHTML='';
+  clients.forEach((c,i)=>{
+    const card=document.createElement('div');
+    card.className='client-card';
+    card.innerHTML=`
+      <div class="client-row">
+        <div class="client-color-dot" style="background:${c.color}"></div>
+        <input type="text" placeholder="Client name" value="${c.name}" onchange="clients[${i}].name=this.value;updateAll()">
+        ${clients.length>1?`<button onclick="removeClient(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;">×</button>`:''}
+      </div>
+      <div class="client-sub-row">
+        <div>
+          <div class="client-sublabel">Contracted ($)</div>
+          <input type="number" placeholder="0" value="${c.contracted||''}" onchange="clients[${i}].contracted=parseFloat(this.value)||0;updateAll()">
+        </div>
+        <div>
+          <div class="client-sublabel">Received ($)</div>
+          <input type="number" placeholder="0" value="${c.received||''}" onchange="clients[${i}].received=parseFloat(this.value)||0;updateAll()">
+        </div>
+      </div>
+    `;
+    g.appendChild(card);
+  });
+}
+
+function addClient(){
+  if(clients.length>=8)return;
+  clients.push({name:'New client',contracted:0,received:0,color:CLIENT_COLORS[clients.length%CLIENT_COLORS.length]});
+  buildClientGrid();
+  updateAll();
+  saveToStorage();
+}
+
+function removeClient(i){
+  clients.splice(i,1);
+  buildClientGrid();
+  updateAll();
+  saveToStorage();
+}
+
+// MAIN CHART
+const ctx=document.getElementById('revenueChart').getContext('2d');
+const mainChart=new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:MONTHS,
+    datasets:[
+      {label:'Conservative',data:cumCons,borderColor:'#888780',borderWidth:2,pointBackgroundColor:'#888780',pointRadius:4,pointHoverRadius:7,fill:false,tension:0.35},
+      {label:'Base case',data:cumBase,borderColor:'#BA7517',borderWidth:2.5,pointBackgroundColor:'#BA7517',pointRadius:4,pointHoverRadius:7,fill:false,tension:0.35},
+      {label:'Optimistic',data:cumOpt,borderColor:'#3B6D11',borderWidth:2,pointBackgroundColor:'#3B6D11',pointRadius:4,pointHoverRadius:7,fill:false,tension:0.35},
+      {label:'Cash received',data:Array(8).fill(null),borderColor:'#185FA5',backgroundColor:'#185FA5',borderWidth:3,pointBackgroundColor:'#185FA5',pointRadius:6,pointHoverRadius:9,fill:false,tension:0.35,spanGaps:false},
+      {label:'Contracts signed',data:Array(8).fill(null),borderColor:'#5B3D8A',backgroundColor:'#5B3D8A',borderWidth:2.5,borderDash:[4,3],pointBackgroundColor:'#5B3D8A',pointRadius:5,pointHoverRadius:8,fill:false,tension:0.35,spanGaps:false},
+      {label:'$100K target',data:Array(8).fill(100000),borderColor:'#A32D2D',borderWidth:1.5,borderDash:[7,5],pointRadius:0,fill:false,tension:0},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#1C2B3A',titleColor:'#C8A97A',bodyColor:'rgba(255,255,255,0.75)',
+        borderColor:'rgba(200,169,122,0.2)',borderWidth:1,padding:12,
+        titleFont:{family:'DM Sans',size:12,weight:'500'},
+        bodyFont:{family:'DM Mono',size:12},
+        callbacks:{
+          title:items=>items[0].label+' 2025',
+          label:ctx=>{
+            if(ctx.parsed.y===null||ctx.parsed.y===undefined)return null;
+            const note=ctx.datasetIndex===3&&actualNotes[ctx.dataIndex]?'  → '+actualNotes[ctx.dataIndex]:'';
+            return '  '+ctx.dataset.label+': $'+ctx.parsed.y.toLocaleString()+(note||'');
+          }
+        }
+      }
+    },
+    scales:{
+      x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#777068',font:{family:'DM Sans',size:11},autoSkip:false,maxRotation:0}},
+      y:{min:0,max:150000,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#777068',font:{family:'DM Mono',size:11},callback:v=>'$'+(v/1000).toFixed(0)+'K',maxTicksLimit:7}}
+    }
+  }
+});
+
+// CLIENT BAR CHART
+const ctx2=document.getElementById('clientBarChart').getContext('2d');
+const clientChart=new Chart(ctx2,{
+  type:'bar',
+  data:{labels:MONTHS,datasets:[]},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'#1C2B3A',titleColor:'#C8A97A',bodyColor:'rgba(255,255,255,0.75)',
+        borderColor:'rgba(200,169,122,0.2)',borderWidth:1,padding:12,
+        titleFont:{family:'DM Sans',size:12,weight:'500'},
+        bodyFont:{family:'DM Mono',size:12},
+        callbacks:{
+          title:items=>items[0].label+' 2025',
+          label:ctx=>ctx.parsed.y>0?'  '+ctx.dataset.label+': $'+ctx.parsed.y.toLocaleString():null
+        }
+      }
+    },
+    scales:{
+      x:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#777068',font:{family:'DM Sans',size:11},autoSkip:false,maxRotation:0}},
+      y:{stacked:true,min:0,grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#777068',font:{family:'DM Mono',size:11},callback:v=>'$'+(v/1000).toFixed(0)+'K'}}
+    }
+  }
+});
+
+function setScenario(s,btn){
+  activeScenario=s;
+  document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active','all','cons','base','opti'));
+  btn.classList.add('active',s);
+  const show={all:[true,true,true],cons:[true,false,false],base:[false,true,false],opti:[false,false,true]};
+  const v=show[s]||[true,true,true];
+  [0,1,2].forEach(i=>mainChart.data.datasets[i].hidden=!v[i]);
+  mainChart.update();
+}
+
+function switchChart(type,tab){
+  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  if(type==='cumulative'){
+    document.getElementById('cumulativeChart').style.display='block';
+    document.getElementById('clientChart').style.display='none';
+  } else {
+    document.getElementById('cumulativeChart').style.display='none';
+    document.getElementById('clientChart').style.display='block';
+    updateClientChart();
+  }
+}
+
+function updateClientChart(){
+  // Distribute each client's received amount evenly across months as a simple allocation
+  clientChart.data.datasets=clients.map((c,i)=>({
+    label:c.name||'Client '+(i+1),
+    data:MONTHS.map((_,mi)=>{
+      // Show received in month 0 for first client (MaxiBlock), rest empty unless set
+      if(i===0&&c.received>0){
+        const perMonth=Math.round(c.received/Math.max(1,MONTHS.filter((_,j)=>actualsCash[j]!==null).length||1));
+        return actualsCash[mi]!==null?perMonth:null;
+      }
+      return null;
+    }),
+    backgroundColor:c.color+'CC',
+    borderColor:c.color,
+    borderWidth:1,
+    borderRadius:3,
+  }));
+  // Simple: just show contracted as single bar for each client in May
+  clientChart.data.datasets=clients.map((c,i)=>({
+    label:c.name||'Client '+(i+1),
+    data:MONTHS.map((_,mi)=>mi===i&&c.contracted>0?c.contracted:0),
+    backgroundColor:c.color+'BB',
+    borderColor:c.color,
+    borderWidth:1,
+    borderRadius:3,
+  }));
+  clientChart.update();
+}
+
+function saveToStorage(){
+  try{
+    localStorage.setItem('vs_cash',JSON.stringify(actualsCash));
+    localStorage.setItem('vs_signed',JSON.stringify(actualsSigned));
+    localStorage.setItem('vs_notes',JSON.stringify(actualNotes));
+    localStorage.setItem('vs_clients',JSON.stringify(clients));
+    localStorage.setItem('vs_updated',new Date().toISOString());
+  }catch(e){console.warn('Save failed',e);}
+}
+
+function loadFromStorage(){
+  try{
+    const cash=localStorage.getItem('vs_cash');
+    const signed=localStorage.getItem('vs_signed');
+    const notes=localStorage.getItem('vs_notes');
+    const cls=localStorage.getItem('vs_clients');
+    if(cash)actualsCash=JSON.parse(cash);
+    if(signed)actualsSigned=JSON.parse(signed);
+    if(notes)actualNotes=JSON.parse(notes);
+    if(cls)clients=JSON.parse(cls);
+  }catch(e){console.warn('Load failed',e);}
+}
+
+function updateAll(){
+  // Read monthly inputs
+  MONTHS.forEach((_,i)=>{
+    const cv=document.getElementById('cash-'+i)?.value;
+    const sv=document.getElementById('signed-'+i)?.value;
+    const nv=document.getElementById('note-'+i)?.value||'';
+    actualsCash[i]=cv===''||cv===undefined?null:parseFloat(cv);
+    actualsSigned[i]=sv===''||sv===undefined?null:parseFloat(sv);
+    actualNotes[i]=nv;
+  });
+  saveToStorage();
+
+  // Build cumulative arrays
+  function buildCum(arr){
+    let last=0,lastNonNull=-1;
+    arr.forEach((v,i)=>{if(v!==null)lastNonNull=i;});
+    return arr.map((v,i)=>{
+      if(i>lastNonNull)return null;
+      if(v!==null)last+=v;
+      return Math.round(last);
+    });
+  }
+
+  const cumCash=buildCum(actualsCash);
+  const cumSigned=buildCum(actualsSigned);
+
+  mainChart.data.datasets[3].data=cumCash;
+  mainChart.data.datasets[4].data=cumSigned;
+  mainChart.update();
+
+  // Stats
+  const lastCash=cumCash.filter(v=>v!==null);
+  const lastSigned=cumSigned.filter(v=>v!==null);
+  const cashTotal=lastCash.length>0?lastCash[lastCash.length-1]:0;
+  const signedTotal=lastSigned.length>0?lastSigned[lastSigned.length-1]:0;
+  const gap=Math.max(0,100000-cashTotal);
+
+  document.getElementById('statActual').textContent='$'+cashTotal.toLocaleString();
+  document.getElementById('statActual').className='stat-val'+(cashTotal===0?' ':(cashTotal>=cumBase[lastCash.length-1]||0?' ok':' warning'));
+  document.getElementById('statSigned').textContent='$'+signedTotal.toLocaleString();
+  document.getElementById('statGap').textContent='$'+gap.toLocaleString();
+  document.getElementById('statGap').className='stat-val'+(gap===0?' ok':gap>60000?' warning':'');
+  document.getElementById('statClients').textContent=clients.filter(c=>c.name&&c.name!=='New client').length;
+
+  // Alert: behind base case?
+  let showAlert=false;
+  if(lastCash.length>0){
+    const monthIdx=lastCash.length-1;
+    if(cashTotal<cumBase[monthIdx]*0.85){showAlert=true;}
+  }
+  document.getElementById('alertBanner').classList.toggle('show',showAlert);
+  document.getElementById('statActual').classList.toggle('warning',showAlert&&cashTotal>0);
+
+  // Client chart refresh if visible
+  if(document.getElementById('clientChart').style.display!=='none'){updateClientChart();}
+
+  // Timestamp
+  const now=new Date();
+  document.getElementById('lastUpdated').textContent='Last updated: '+now.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})+' at '+now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+
+  const msg=document.getElementById('updatedMsg');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'),2500);
+}
+
+function clearActuals(){
+  if(!confirm('Clear all actual figures? This cannot be undone.'))return;
+  actualsCash=Array(8).fill(null);
+  actualsSigned=Array(8).fill(null);
+  actualNotes=Array(8).fill('');
+  saveToStorage();
+  buildMonthGrid();
+  updateAll();
+}
+
+// INIT — load saved data first, then rebuild UI
+loadFromStorage();
+buildMonthGrid();
+buildClientGrid();
+updateAll();
+</script>
+</body>
+</html>
