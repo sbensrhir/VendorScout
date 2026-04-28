@@ -6,6 +6,7 @@
 <title>VendorScout — Road to $100K</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --navy:#1C2B3A; --navy-lt:rgba(28,43,58,0.06);
@@ -556,26 +557,35 @@ function updateClientChart(){
   clientChart.update();
 }
 
-function saveToStorage(){
+// — Supabase client —
+const _sb = supabase.createClient(
+  'https://modqzgdfrpypicyubpra.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vZHF6Z2RmcnB5cGljeXVicHJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMjgzMTEsImV4cCI6MjA5MjkwNDMxMX0.hME8jL8KoGtvyaRz_K_T-p8j-KzK8dXYgP8tliiXFXs'
+);
+
+async function saveToStorage(){
   try{
-    localStorage.setItem('vs_cash',JSON.stringify(actualsCash));
-    localStorage.setItem('vs_signed',JSON.stringify(actualsSigned));
-    localStorage.setItem('vs_notes',JSON.stringify(actualNotes));
-    localStorage.setItem('vs_clients',JSON.stringify(clients));
-    localStorage.setItem('vs_updated',new Date().toISOString());
+    const rows = [
+      {id:'vs_cash',   value:JSON.stringify(actualsCash)},
+      {id:'vs_signed', value:JSON.stringify(actualsSigned)},
+      {id:'vs_notes',  value:JSON.stringify(actualNotes)},
+      {id:'vs_clients',value:JSON.stringify(clients)},
+      {id:'vs_updated',value:new Date().toISOString()},
+    ];
+    const {error} = await _sb.from('dashboard_data').upsert(rows,{onConflict:'id'});
+    if(error) console.warn('Supabase save failed',error);
   }catch(e){console.warn('Save failed',e);}
 }
 
-function loadFromStorage(){
+async function loadFromStorage(){
   try{
-    const cash=localStorage.getItem('vs_cash');
-    const signed=localStorage.getItem('vs_signed');
-    const notes=localStorage.getItem('vs_notes');
-    const cls=localStorage.getItem('vs_clients');
-    if(cash)actualsCash=JSON.parse(cash);
-    if(signed)actualsSigned=JSON.parse(signed);
-    if(notes)actualNotes=JSON.parse(notes);
-    if(cls)clients=JSON.parse(cls);
+    const {data,error} = await _sb.from('dashboard_data').select('id,value');
+    if(error||!data||!data.length) return;
+    const map = Object.fromEntries(data.map(r=>[r.id,r.value]));
+    if(map.vs_cash)    actualsCash    = JSON.parse(map.vs_cash);
+    if(map.vs_signed)  actualsSigned  = JSON.parse(map.vs_signed);
+    if(map.vs_notes)   actualNotes    = JSON.parse(map.vs_notes);
+    if(map.vs_clients) clients        = JSON.parse(map.vs_clients);
   }catch(e){console.warn('Load failed',e);}
 }
 
@@ -654,11 +664,13 @@ function clearActuals(){
   updateAll();
 }
 
-// INIT — load saved data first, then rebuild UI
-loadFromStorage();
-buildMonthGrid();
-buildClientGrid();
-updateAll();
+// INIT — load saved data first (async), then rebuild UI
+(async()=>{
+  await loadFromStorage();
+  buildMonthGrid();
+  buildClientGrid();
+  updateAll();
+})();
 </script>
 </body>
 </html>
