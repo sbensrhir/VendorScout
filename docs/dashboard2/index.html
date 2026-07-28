@@ -92,12 +92,16 @@
   .toggle-slider:before { content:''; position:absolute; height:14px; width:14px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s; }
   input:checked + .toggle-slider { background:var(--green); }
   input:checked + .toggle-slider:before { transform:translateX(16px); }
+  .period-btn.active { background:var(--navy); color:white; border-color:var(--navy); }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-brand">⚡ VendorScout</div>
+  <div class="nav-brand" style="display:flex;align-items:center;gap:10px;">
+    <div style="width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:-0.5px;">VS</div>
+    VendorScout
+  </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('home',this)">Home</button>
     <button class="nav-tab" onclick="showTab('pipeline',this)">Pipeline</button>
@@ -127,7 +131,10 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Newsletter Subscribers</div>
-      <div class="kpi-value" id="kpi-subs">250</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="kpi-value" id="kpi-subs">250</div>
+        <button class="btn-sm" onclick="quickUpdateSubs()" style="font-size:11px;padding:2px 8px;">Update</button>
+      </div>
       <div class="kpi-sub">Goal: 1,000</div>
       <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-subs-bar" style="background:var(--blue);width:25%"></div></div>
     </div>
@@ -204,29 +211,55 @@
 
 <!-- CONTENT -->
 <div id="tab-content" class="page">
-  <div class="grid-3">
+  <div class="kpi-grid">
     <div class="kpi-card"><div class="kpi-label">Posts Published</div><div class="kpi-value" id="c-published">0</div></div>
     <div class="kpi-card"><div class="kpi-label">Avg Impressions</div><div class="kpi-value" id="c-avg">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Impressions</div><div class="kpi-value" id="c-total-imp">0</div></div>
     <div class="kpi-card"><div class="kpi-label">Inbound Generated</div><div class="kpi-value" id="c-inbound">0 posts</div></div>
   </div>
+
+  <!-- Period toggle -->
+  <div style="display:flex;gap:8px;margin-bottom:1.5rem;align-items:center;">
+    <span style="font-size:13px;color:var(--muted);font-weight:500;">View:</span>
+    <button class="btn-sm period-btn active" onclick="setPeriod('all',this)">All time</button>
+    <button class="btn-sm period-btn" onclick="setPeriod('month',this)">This month</button>
+    <button class="btn-sm period-btn" onclick="setPeriod('quarter',this)">This quarter</button>
+  </div>
+
   <div class="grid-2">
     <div class="card">
       <div class="section-header">
-        <div class="section-title">Upcoming Posts</div>
+        <div class="section-title">Upcoming & Planned Posts</div>
         <button class="btn btn-primary" onclick="openModal('m-content')">+ Add Post</button>
       </div>
       <div id="upcoming-posts"><div class="loading">Loading...</div></div>
     </div>
     <div class="card">
-      <div class="section-title" style="margin-bottom:1rem;">Impressions Over Time</div>
+      <div class="section-header">
+        <div class="section-title">Performance Over Time</div>
+        <select id="chart-metric" onchange="renderContentTab()" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+          <option value="impressions">Impressions</option>
+          <option value="likes">Likes</option>
+          <option value="comments">Comments</option>
+        </select>
+      </div>
       <div class="chart-lg"><canvas id="imp-chart"></canvas></div>
     </div>
   </div>
+
   <div class="card">
-    <div class="section-title" style="margin-bottom:1rem;">Published Performance</div>
+    <div class="section-header">
+      <div class="section-title">All Posts</div>
+      <select id="content-status-filter" onchange="renderContentTab()" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+        <option value="all">All statuses</option>
+        <option value="published">Published</option>
+        <option value="planned">Planned</option>
+        <option value="drafted">Drafted</option>
+      </select>
+    </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Platform</th><th>Topic</th><th>Impressions</th><th>Likes</th><th>Comments</th><th>Inbound</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th>Platform</th><th>Topic</th><th>Impressions</th><th>Likes</th><th>Comments</th><th>Status</th><th>Inbound</th><th></th></tr></thead>
         <tbody id="content-tbody"></tbody>
       </table>
     </div>
@@ -455,6 +488,36 @@ let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{}
 let charts = {};
 let editingLeadId = null;
 let editingContentId = null;
+let currentPeriod = 'all';
+
+function setPeriod(period, btn) {
+  currentPeriod = period;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderContentTab();
+}
+
+function filterByPeriod(data) {
+  const now = new Date();
+  if(currentPeriod === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    return data.filter(c=>c.post_date >= start);
+  }
+  if(currentPeriod === 'quarter') {
+    const q = Math.floor(now.getMonth()/3);
+    const start = new Date(now.getFullYear(), q*3, 1).toISOString().split('T')[0];
+    return data.filter(c=>c.post_date >= start);
+  }
+  return data;
+}
+
+async function quickUpdateSubs() {
+  const current = Number(D.settings.newsletter_subscribers||250);
+  const val = prompt('Update newsletter subscribers:', current);
+  if(!val || isNaN(val)) return;
+  await sb.from('dashboard_settings').upsert({key:'newsletter_subscribers',value:val},{onConflict:'key'});
+  await loadAll();
+}
 
 const fmt = n => '$' + Number(n||0).toLocaleString('en-AU');
 const pct = (a,b) => b > 0 ? Math.min(Math.round(a/b*100),100) : 0;
@@ -706,15 +769,84 @@ async function delLead(id) {
 }
 
 function renderContentTab() {
-  const pub=D.content.filter(c=>c.status==='published').slice().reverse();
+  const metric = document.getElementById('chart-metric')?.value || 'impressions';
+  const statusFilter = document.getElementById('content-status-filter')?.value || 'all';
+  const metricColors = {impressions:'#4A90D9',likes:'#E63946',comments:'#2A9D8F'};
+  const metricLabels = {impressions:'Impressions',likes:'Likes',comments:'Comments'};
+
+  // Published posts filtered by period for chart and KPIs
+  const allPub = D.content.filter(c=>c.status==='published').slice().sort((a,b)=>a.post_date>b.post_date?1:-1);
+  const pub = filterByPeriod(allPub);
+
+  // Update KPIs
+  const totalImp = pub.reduce((s,c)=>s+Number(c.impressions||0),0);
+  const avgImp = pub.length>0?Math.round(totalImp/pub.length):0;
+  if(document.getElementById('c-published')) document.getElementById('c-published').textContent = pub.length;
+  if(document.getElementById('c-avg')) document.getElementById('c-avg').textContent = avgImp.toLocaleString();
+  if(document.getElementById('c-total-imp')) document.getElementById('c-total-imp').textContent = totalImp.toLocaleString();
+  if(document.getElementById('c-inbound')) document.getElementById('c-inbound').textContent = pub.filter(c=>c.generated_inbound).length+' posts';
+
+  // Chart
   const ctx=document.getElementById('imp-chart');
   if(ctx){
     if(charts.imp)charts.imp.destroy();
-    charts.imp=new Chart(ctx,{type:'line',data:{labels:pub.map(c=>c.post_date),datasets:[{label:'Impressions',data:pub.map(c=>c.impressions),borderColor:'#4A90D9',backgroundColor:'rgba(74,144,217,0.1)',fill:true,tension:0.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#F1F5F9'}}}}});
+    charts.imp=new Chart(ctx,{type:'line',data:{labels:pub.map(c=>c.post_date),datasets:[{label:metricLabels[metric],data:pub.map(c=>Number(c[metric]||0)),borderColor:metricColors[metric],backgroundColor:metricColors[metric]+'22',fill:true,tension:0.4,pointRadius:5,pointHoverRadius:7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${metricLabels[metric]}: ${ctx.raw.toLocaleString()}`}}},scales:{x:{grid:{display:false}},y:{grid:{color:'#F1F5F9'}}}}});
   }
-  const upcoming=D.content.filter(c=>c.status!=='published');
-  document.getElementById('upcoming-posts').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts</div>':upcoming.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);"><div style="display:flex;gap:6px;margin-bottom:4px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span><span class="badge b-${c.status}">${c.status}</span></div><div style="font-size:14px;font-weight:500;">${c.topic}</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div><div style="margin-top:6px;display:flex;gap:6px;"><button class="btn-sm" onclick="markPub('${c.id}')">Mark Published</button><button class="btn-sm" onclick="delContent('${c.id}')">Delete</button></div></div>`).join('');
-  document.getElementById('content-tbody').innerHTML=pub.reverse().map(c=>`<tr><td>${c.post_date}</td><td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span></td><td style="max-width:180px;">${c.linkedin_url?`<a href="${c.linkedin_url}" target="_blank" style="color:var(--blue);text-decoration:none;">${c.topic} ↗</a>`:c.topic}</td><td>${(c.impressions||0).toLocaleString()}</td><td>${c.likes||0}</td><td>${c.comments||0}</td><td><span class="badge" style="background:${c.generated_inbound?'#D1FAE5':'#F1F5F9'};color:${c.generated_inbound?'#065F46':'#64748B'}">${c.generated_inbound?'Yes':'No'}</span></td><td style="display:flex;gap:4px;"><button class="btn-sm" onclick="editContent('${c.id}')">Edit</button><button class="btn-sm" style="color:var(--red);" onclick="delContent('${c.id}')">✕</button></td></tr>`).join('');
+
+  // Upcoming posts — always show all, never filtered by period
+  const upcoming = D.content.filter(c=>c.status!=='published');
+  document.getElementById('upcoming-posts').innerHTML=upcoming.length===0
+    ?'<div style="color:var(--muted);font-size:13px;padding:8px 0;">No upcoming posts — add your next post!</div>'
+    :upcoming.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;gap:6px;margin-bottom:4px;">
+          <span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span>
+          <span class="badge" style="background:${c.status==='drafted'?'#FEF3C7':'#F1F5F9'};color:${c.status==='drafted'?'#92400E':'#64748B'}">${c.status}</span>
+        </div>
+        <div style="font-size:14px;font-weight:500;">${c.topic}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;">
+          <button class="btn-sm" style="background:#D1FAE5;color:#065F46;border-color:#A7F3D0;" onclick="markPub('${c.id}')">✓ Mark Published</button>
+          <button class="btn-sm" onclick="editContent('${c.id}')">Edit</button>
+          <button class="btn-sm" style="color:var(--red);" onclick="delContent('${c.id}')">✕</button>
+        </div>
+      </div>`).join('');
+
+  // All posts table — status filter + period filter
+  let tableData = D.content.slice().sort((a,b)=>b.post_date>a.post_date?1:-1);
+  if(statusFilter!=='all') tableData = tableData.filter(c=>c.status===statusFilter);
+  if(statusFilter==='published'||statusFilter==='all') {
+    const nonPub = tableData.filter(c=>c.status!=='published');
+    const pubFiltered = filterByPeriod(tableData.filter(c=>c.status==='published'));
+    tableData = [...nonPub, ...pubFiltered].sort((a,b)=>b.post_date>a.post_date?1:-1);
+  }
+
+  document.getElementById('content-tbody').innerHTML=tableData.length===0
+    ?'<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem;">No posts found</td></tr>'
+    :tableData.map(c=>{
+      const statusStyle={planned:'#F1F5F9:#64748B',drafted:'#FEF3C7:#92400E',published:'#D1FAE5:#065F46'};
+      const [sbg,scol]=(statusStyle[c.status]||'#F1F5F9:#64748B').split(':');
+      return `<tr>
+        <td>${c.post_date||'TBD'}</td>
+        <td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span></td>
+        <td style="max-width:180px;">${c.linkedin_url?`<a href="${c.linkedin_url}" target="_blank" style="color:var(--blue);text-decoration:none;">${c.topic} ↗</a>`:c.topic}</td>
+        <td><strong>${(c.impressions||0).toLocaleString()}</strong></td>
+        <td>${c.likes||0}</td>
+        <td>${c.comments||0}</td>
+        <td><span class="badge" style="background:${sbg};color:${scol}">${c.status}</span></td>
+        <td><span class="badge" style="background:${c.generated_inbound?'#D1FAE5':'#F1F5F9'};color:${c.generated_inbound?'#065F46':'#64748B'}">${c.generated_inbound?'Yes':'No'}</span></td>
+        <td style="display:flex;gap:4px;">
+          ${c.status!=='published'?`<button class="btn-sm" style="color:#065F46;" onclick="markPub('${c.id}')">✓</button>`:''}
+          <button class="btn-sm" onclick="editContent('${c.id}')">Edit</button>
+          <button class="btn-sm" style="color:var(--red);" onclick="delContent('${c.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+function stageBadgeContent(s) {
+  const m={planned:'#F1F5F9:#64748B',drafted:'#FEF3C7:#92400E',published:'#D1FAE5:#065F46'};
+  const [bg,col]=(m[s]||'#F1F5F9:#64748B').split(':');
+  return `<span class="badge" style="background:${bg};color:${col}">${s}</span>`;
 }
 
 function editContent(id) {
