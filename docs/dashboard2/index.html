@@ -111,6 +111,7 @@
 
 <!-- HOME -->
 <div id="tab-home" class="page active">
+  <div id="alerts-bar" style="margin-bottom:1rem;display:none;"></div>
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-label">Monthly Revenue</div>
@@ -333,7 +334,7 @@
 <!-- MODALS -->
 <div class="modal-overlay" id="m-pipe">
   <div class="modal">
-    <div class="modal-title">Add New Lead</div>
+    <div class="modal-title" id="pipe-modal-title">Add New Lead</div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Company *</label><input class="form-input" id="p-co"></div>
       <div class="form-group"><label class="form-label">Contact Name</label><input class="form-input" id="p-cn"></div>
@@ -354,17 +355,18 @@
       <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="p-na"></div>
       <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="p-nd"></div>
     </div>
+    <div class="form-group"><label class="form-label">Last Action</label><input class="form-input" id="p-la" placeholder="What happened last?"></div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="p-notes"></textarea></div>
     <div class="modal-actions">
-      <button class="btn-sm" onclick="closeModal('m-pipe')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+      <button class="btn-sm" onclick="closeModal('m-pipe');editingLeadId=null;">Cancel</button>
+      <button class="btn btn-primary" id="pipe-save-btn" onclick="saveLead()">Save Lead</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="m-content">
   <div class="modal">
-    <div class="modal-title">Add Content</div>
+    <div class="modal-title" id="content-modal-title">Add Content</div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Post Date</label><input type="date" class="form-input" id="c-date"></div>
       <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="c-plat"><option>LinkedIn</option><option>Newsletter</option></select></div>
@@ -378,9 +380,17 @@
       <div class="form-group"><label class="form-label">Impressions</label><input type="number" class="form-input" id="c-imp" value="0"></div>
       <div class="form-group"><label class="form-label">Likes</label><input type="number" class="form-input" id="c-lk" value="0"></div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Comments</label><input type="number" class="form-input" id="c-cm" value="0"></div>
+      <div class="form-group"><label class="form-label">LinkedIn URL</label><input class="form-input" id="c-url" placeholder="https://linkedin.com/..."></div>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+      <label class="form-label" style="margin:0;">Generated Inbound?</label>
+      <label class="toggle"><input type="checkbox" id="c-inbound"><span class="toggle-slider"></span></label>
+    </div>
     <div class="modal-actions">
-      <button class="btn-sm" onclick="closeModal('m-content')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveContent()">Save</button>
+      <button class="btn-sm" onclick="closeModal('m-content');editingContentId=null;">Cancel</button>
+      <button class="btn btn-primary" id="content-save-btn" onclick="saveContent()">Save</button>
     </div>
   </div>
 </div>
@@ -443,6 +453,8 @@ const TASKS = [
 
 let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{} };
 let charts = {};
+let editingLeadId = null;
+let editingContentId = null;
 
 const fmt = n => '$' + Number(n||0).toLocaleString('en-AU');
 const pct = (a,b) => b > 0 ? Math.min(Math.round(a/b*100),100) : 0;
@@ -487,7 +499,42 @@ async function loadAll() {
   renderAll();
 }
 
-function renderAll() { renderKPIs(); renderTasks(); renderHomeFunnel(); renderUrgent(); renderHomeContent(); }
+function renderAll() { renderKPIs(); renderTasks(); renderHomeFunnel(); renderUrgent(); renderHomeContent(); renderAlerts(); }
+
+function renderAlerts() {
+  const alerts = [];
+  const done = D.tasks.filter(t=>t.completed).length;
+  const total = D.tasks.length;
+  const mrr = D.revenue.filter(r=>r.status==='active').reduce((s,r)=>s+Number(r.monthly_value),0);
+  const today = new Date();
+  const day = today.getDay(); // 0=Sun, 1=Mon... 2=Tue, 4=Thu, 5=Fri
+
+  // Revenue alert
+  if(mrr === 0) alerts.push({type:'red', msg:'🔴 Revenue is $0 — closing one client this week should be your top priority.'});
+  else if(mrr < 7500) alerts.push({type:'amber', msg:'🟡 Revenue is below 50% of goal — focus on converting warm leads.'});
+
+  // Task alerts
+  if(day >= 2 && !D.tasks.find(t=>t.task_id==='post-tue'&&t.completed)) alerts.push({type:'amber', msg:'🟡 Tuesday post not yet published — post today before 12pm.'});
+  if(day >= 4 && !D.tasks.find(t=>t.task_id==='post-thu'&&t.completed)) alerts.push({type:'amber', msg:'🟡 Thursday post not yet published — post today before 8am.'});
+  if(day >= 1 && !D.tasks.find(t=>t.task_id==='outreach'&&t.completed)) alerts.push({type:'amber', msg:'🟡 5 outreach messages not sent yet this week.'});
+
+  // Overdue pipeline
+  const overdue = D.pipeline.filter(p=>p.next_action_date && new Date(p.next_action_date)<today && !['Signed','Lost'].includes(p.stage));
+  if(overdue.length>0) alerts.push({type:'red', msg:`🔴 ${overdue.length} lead${overdue.length>1?'s':''} with overdue actions: ${overdue.map(p=>p.company).join(', ')}.`});
+
+  // Newsletter
+  const subs = Number(D.settings.newsletter_subscribers||250);
+  if(subs < 500) alerts.push({type:'blue', msg:`💡 Newsletter at ${subs} subscribers — goal is 1,000. Every post should mention APAC E-Commerce Intelligence.`});
+
+  const bar = document.getElementById('alerts-bar');
+  if(alerts.length === 0) { bar.style.display='none'; return; }
+  bar.style.display='block';
+  bar.innerHTML = alerts.map(a=>{
+    const bg = a.type==='red'?'#FEE2E2':a.type==='amber'?'#FEF3C7':'#DBEAFE';
+    const col = a.type==='red'?'#991B1B':a.type==='amber'?'#92400E':'#1D4ED8';
+    return `<div style="background:${bg};color:${col};padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:6px;">${a.msg}</div>`;
+  }).join('');
+}
 
 function renderKPIs() {
   const mrr = D.revenue.filter(r=>r.status==='active'&&r.service_type==='Retainer').reduce((s,r)=>s+Number(r.monthly_value),0);
@@ -603,13 +650,51 @@ function renderPipeChart() {
 function renderPipeTable() {
   const f=document.getElementById('stage-filter')?.value;
   const data=f?D.pipeline.filter(p=>p.stage===f):D.pipeline;
-  document.getElementById('pipe-tbody').innerHTML=data.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No leads yet</td></tr>':data.map(p=>`<tr><td><strong>${p.company}</strong></td><td>${p.contact_name||'—'}<br><span style="font-size:11px;color:var(--muted);">${p.contact_role||''}</span></td><td>${p.source||'—'}</td><td>${stageBadge(p.stage)}</td><td>${fmt(p.estimated_value)}</td><td>${p.next_action||'—'}</td><td style="color:${p.next_action_date&&new Date(p.next_action_date)<new Date()?'var(--red)':'var(--text)'}">${p.next_action_date||'—'}</td><td><button class="btn-sm" onclick="delLead('${p.id}')">✕</button></td></tr>`).join('');
+  document.getElementById('pipe-tbody').innerHTML=data.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No leads yet</td></tr>':data.map(p=>`<tr><td><strong>${p.company}</strong>${p.notes?`<br><span style="font-size:11px;color:var(--muted);">${p.notes.substring(0,40)}${p.notes.length>40?'...':''}</span>`:''}</td><td>${p.contact_name||'—'}<br><span style="font-size:11px;color:var(--muted);">${p.contact_role||''}</span></td><td>${p.source||'—'}</td><td>${stageBadge(p.stage)}</td><td>${fmt(p.estimated_value)}</td><td>${p.next_action||'—'}</td><td style="color:${p.next_action_date&&new Date(p.next_action_date)<new Date()?'var(--red)':'var(--text)'}">${p.next_action_date||'—'}</td><td style="display:flex;gap:4px;"><button class="btn-sm" onclick="editLead('${p.id}')">Edit</button><button class="btn-sm" style="color:var(--red);" onclick="delLead('${p.id}')">✕</button></td></tr>`).join('');
+}
+
+function editLead(id) {
+  const p = D.pipeline.find(p=>p.id===id);
+  if(!p) return;
+  editingLeadId = id;
+  document.getElementById('pipe-modal-title').textContent = 'Edit Lead — ' + p.company;
+  document.getElementById('pipe-save-btn').textContent = 'Update Lead';
+  document.getElementById('p-co').value = p.company||'';
+  document.getElementById('p-cn').value = p.contact_name||'';
+  document.getElementById('p-role').value = p.contact_role||'';
+  document.getElementById('p-src').value = p.source||'Inbound post';
+  document.getElementById('p-stage').value = p.stage||'Signal';
+  document.getElementById('p-val').value = p.estimated_value||0;
+  document.getElementById('p-na').value = p.next_action||'';
+  document.getElementById('p-nd').value = p.next_action_date||'';
+  document.getElementById('p-la').value = p.last_action||'';
+  document.getElementById('p-notes').value = p.notes||'';
+  openModal('m-pipe');
 }
 
 async function saveLead() {
   const co=document.getElementById('p-co').value;
   if(!co)return alert('Company required');
-  await sb.from('pipeline').insert({company:co,contact_name:document.getElementById('p-cn').value,contact_role:document.getElementById('p-role').value,source:document.getElementById('p-src').value,stage:document.getElementById('p-stage').value,estimated_value:Number(document.getElementById('p-val').value)||0,next_action:document.getElementById('p-na').value,next_action_date:document.getElementById('p-nd').value||null,notes:document.getElementById('p-notes').value});
+  const payload = {
+    company:co,
+    contact_name:document.getElementById('p-cn').value,
+    contact_role:document.getElementById('p-role').value,
+    source:document.getElementById('p-src').value,
+    stage:document.getElementById('p-stage').value,
+    estimated_value:Number(document.getElementById('p-val').value)||0,
+    next_action:document.getElementById('p-na').value,
+    next_action_date:document.getElementById('p-nd').value||null,
+    last_action:document.getElementById('p-la').value,
+    notes:document.getElementById('p-notes').value
+  };
+  if(editingLeadId) {
+    await sb.from('pipeline').update(payload).eq('id',editingLeadId);
+    editingLeadId = null;
+  } else {
+    await sb.from('pipeline').insert(payload);
+  }
+  document.getElementById('pipe-modal-title').textContent='Add New Lead';
+  document.getElementById('pipe-save-btn').textContent='Save Lead';
   closeModal('m-pipe');
   await loadAll();
 }
@@ -629,13 +714,51 @@ function renderContentTab() {
   }
   const upcoming=D.content.filter(c=>c.status!=='published');
   document.getElementById('upcoming-posts').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts</div>':upcoming.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);"><div style="display:flex;gap:6px;margin-bottom:4px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span><span class="badge b-${c.status}">${c.status}</span></div><div style="font-size:14px;font-weight:500;">${c.topic}</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div><div style="margin-top:6px;display:flex;gap:6px;"><button class="btn-sm" onclick="markPub('${c.id}')">Mark Published</button><button class="btn-sm" onclick="delContent('${c.id}')">Delete</button></div></div>`).join('');
-  document.getElementById('content-tbody').innerHTML=pub.reverse().map(c=>`<tr><td>${c.post_date}</td><td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span></td><td style="max-width:200px;">${c.topic}</td><td>${(c.impressions||0).toLocaleString()}</td><td>${c.likes||0}</td><td>${c.comments||0}</td><td><span class="badge" style="background:${c.generated_inbound?'#D1FAE5':'#F1F5F9'};color:${c.generated_inbound?'#065F46':'#64748B'}">${c.generated_inbound?'Yes':'No'}</span></td><td><button class="btn-sm" onclick="delContent('${c.id}')">✕</button></td></tr>`).join('');
+  document.getElementById('content-tbody').innerHTML=pub.reverse().map(c=>`<tr><td>${c.post_date}</td><td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span></td><td style="max-width:180px;">${c.linkedin_url?`<a href="${c.linkedin_url}" target="_blank" style="color:var(--blue);text-decoration:none;">${c.topic} ↗</a>`:c.topic}</td><td>${(c.impressions||0).toLocaleString()}</td><td>${c.likes||0}</td><td>${c.comments||0}</td><td><span class="badge" style="background:${c.generated_inbound?'#D1FAE5':'#F1F5F9'};color:${c.generated_inbound?'#065F46':'#64748B'}">${c.generated_inbound?'Yes':'No'}</span></td><td style="display:flex;gap:4px;"><button class="btn-sm" onclick="editContent('${c.id}')">Edit</button><button class="btn-sm" style="color:var(--red);" onclick="delContent('${c.id}')">✕</button></td></tr>`).join('');
+}
+
+function editContent(id) {
+  const c = D.content.find(c=>c.id===id);
+  if(!c) return;
+  editingContentId = id;
+  document.getElementById('content-modal-title').textContent = 'Edit Post';
+  document.getElementById('content-save-btn').textContent = 'Update Post';
+  document.getElementById('c-date').value = c.post_date||'';
+  document.getElementById('c-plat').value = c.platform||'LinkedIn';
+  document.getElementById('c-topic').value = c.topic||'';
+  document.getElementById('c-aud').value = c.target_audience||'';
+  document.getElementById('c-status').value = c.status||'planned';
+  document.getElementById('c-imp').value = c.impressions||0;
+  document.getElementById('c-lk').value = c.likes||0;
+  document.getElementById('c-cm').value = c.comments||0;
+  document.getElementById('c-url').value = c.linkedin_url||'';
+  document.getElementById('c-inbound').checked = c.generated_inbound||false;
+  openModal('m-content');
 }
 
 async function saveContent() {
   const topic=document.getElementById('c-topic').value;
   if(!topic)return alert('Topic required');
-  await sb.from('content_calendar').insert({post_date:document.getElementById('c-date').value||null,platform:document.getElementById('c-plat').value,topic,target_audience:document.getElementById('c-aud').value,status:document.getElementById('c-status').value,impressions:Number(document.getElementById('c-imp').value)||0,likes:Number(document.getElementById('c-lk').value)||0});
+  const payload = {
+    post_date:document.getElementById('c-date').value||null,
+    platform:document.getElementById('c-plat').value,
+    topic,
+    target_audience:document.getElementById('c-aud').value,
+    status:document.getElementById('c-status').value,
+    impressions:Number(document.getElementById('c-imp').value)||0,
+    likes:Number(document.getElementById('c-lk').value)||0,
+    comments:Number(document.getElementById('c-cm').value)||0,
+    linkedin_url:document.getElementById('c-url').value||null,
+    generated_inbound:document.getElementById('c-inbound').checked
+  };
+  if(editingContentId) {
+    await sb.from('content_calendar').update(payload).eq('id',editingContentId);
+    editingContentId = null;
+  } else {
+    await sb.from('content_calendar').insert(payload);
+  }
+  document.getElementById('content-modal-title').textContent='Add Content';
+  document.getElementById('content-save-btn').textContent='Save';
   closeModal('m-content'); await loadAll(); renderContentTab();
 }
 
