@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorScout — Command Center</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --navy: #0D1B2A; --gold: #C8A97A; --white: #ffffff;
+    --bg: #F4F6F9; --card: #ffffff; --border: #E2E8F0;
+    --text: #1A202C; --muted: #718096;
+    --green: #2A9D8F; --amber: #E9C46A; --red: #E63946;
+    --blue: #4A90D9; --purple: #7C3AED; --orange: #F97316;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+  nav { background: var(--navy); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { color: var(--gold); font-size: 18px; font-weight: 600; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { color: rgba(255,255,255,0.6); background: none; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+  .nav-tab:hover { color: white; background: rgba(255,255,255,0.1); }
+  .nav-tab.active { color: var(--gold); background: rgba(200,169,122,0.15); }
+  .nav-time { color: rgba(255,255,255,0.4); font-size: 12px; }
+  .page { display: none; padding: 2rem; max-width: 1400px; margin: 0 auto; }
+  .page.active { display: block; }
+  .card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.5rem; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .kpi-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 1.25rem; }
+  .kpi-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 700; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .kpi-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .section-title { font-size: 15px; font-weight: 600; }
+  .task-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .task-item:last-child { border-bottom: none; }
+  .task-check { width: 18px; height: 18px; cursor: pointer; accent-color: var(--green); flex-shrink: 0; }
+  .task-label { font-size: 14px; flex: 1; }
+  .task-label.done { text-decoration: line-through; color: var(--muted); }
+  .task-day { font-size: 11px; color: var(--muted); background: var(--bg); padding: 2px 8px; border-radius: 4px; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .b-signal { background:#F1F5F9;color:#64748B; }
+  .b-contacted { background:#DBEAFE;color:#1D4ED8; }
+  .b-nurturing { background:#FEF3C7;color:#92400E; }
+  .b-call { background:#FED7AA;color:#C2410C; }
+  .b-proposal { background:#EDE9FE;color:#6D28D9; }
+  .b-negotiating { background:#FCE7F3;color:#9D174D; }
+  .b-signed { background:#D1FAE5;color:#065F46; }
+  .b-lost { background:#FEE2E2;color:#991B1B; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align:left; padding:8px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); border-bottom:2px solid var(--border); }
+  td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--bg); }
+  .btn { padding:8px 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.2s; }
+  .btn-primary { background:var(--navy); color:white; }
+  .btn-gold { background:var(--gold); color:var(--navy); font-weight:600; }
+  .btn-sm { padding:4px 10px; font-size:12px; border-radius:6px; border:1px solid var(--border); background:white; cursor:pointer; }
+  .btn-sm:hover { background:var(--bg); }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:16px; padding:2rem; width:500px; max-width:90vw; max-height:90vh; overflow-y:auto; }
+  .modal-title { font-size:18px; font-weight:600; margin-bottom:1.5rem; }
+  .form-group { margin-bottom:1rem; }
+  .form-label { font-size:13px; font-weight:500; margin-bottom:4px; display:block; }
+  .form-input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; outline:none; font-family:inherit; }
+  .form-input:focus { border-color:var(--navy); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:1.5rem; }
+  .goal-item { margin-bottom:1.25rem; }
+  .goal-header { display:flex; justify-content:space-between; margin-bottom:4px; }
+  .vision-box { background:var(--navy); border-radius:12px; padding:2rem; margin-bottom:1.5rem; color:white; }
+  .vision-text { font-size:15px; line-height:1.9; color:rgba(255,255,255,0.85); }
+  .vision-text span { color:var(--gold); font-weight:600; }
+  .urgent-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .urgent-item:last-child { border-bottom:none; }
+  textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-size:14px; resize:vertical; min-height:80px; font-family:inherit; }
+  .chart-c { position:relative; height:200px; }
+  .chart-lg { position:relative; height:280px; }
+  .loading { color:var(--muted); font-size:14px; padding:2rem; text-align:center; }
+  .toggle { position:relative; display:inline-block; width:36px; height:20px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; cursor:pointer; inset:0; background:#CBD5E0; border-radius:20px; transition:0.3s; }
+  .toggle-slider:before { content:''; position:absolute; height:14px; width:14px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s; }
+  input:checked + .toggle-slider { background:var(--green); }
+  input:checked + .toggle-slider:before { transform:translateX(16px); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">⚡ VendorScout</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('home',this)">Home</button>
+    <button class="nav-tab" onclick="showTab('pipeline',this)">Pipeline</button>
+    <button class="nav-tab" onclick="showTab('content',this)">Content</button>
+    <button class="nav-tab" onclick="showTab('signals',this)">Warm Signals</button>
+    <button class="nav-tab" onclick="showTab('revenue',this)">Revenue</button>
+    <button class="nav-tab" onclick="showTab('goals',this)">Goals</button>
+  </div>
+  <div class="nav-time" id="nav-time"></div>
+</nav>
+
+<!-- HOME -->
+<div id="tab-home" class="page active">
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Monthly Revenue</div>
+      <div class="kpi-value" id="kpi-rev">$0</div>
+      <div class="kpi-sub">Goal: $15,000 AUD</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-rev-bar" style="background:var(--red);width:0%"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Clients</div>
+      <div class="kpi-value" id="kpi-clients">0</div>
+      <div class="kpi-sub">Goal: 4 clients</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-clients-bar" style="background:var(--amber);width:0%"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Newsletter Subscribers</div>
+      <div class="kpi-value" id="kpi-subs">250</div>
+      <div class="kpi-sub">Goal: 1,000</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-subs-bar" style="background:var(--blue);width:25%"></div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Week Score</div>
+      <div class="kpi-value" id="kpi-score">0/7</div>
+      <div class="kpi-sub">Non-negotiables done</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-score-bar" style="background:var(--green);width:0%"></div></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Weekly Non-Negotiables</div>
+        <button class="btn-sm" onclick="resetWeek()">Reset Week</button>
+      </div>
+      <div id="tasks-list"><div class="loading">Loading...</div></div>
+      <div style="margin-top:12px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" id="tasks-label">0 of 7 completed</div>
+        <div class="progress-bar"><div class="progress-fill" id="tasks-bar" style="background:var(--green);width:0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Pipeline Snapshot</div>
+        <button class="btn-sm" onclick="showTab('pipeline',null)">View all →</button>
+      </div>
+      <div class="chart-c"><canvas id="home-funnel"></canvas></div>
+      <div style="margin-top:1rem;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Most Urgent</div>
+        <div id="urgent-leads"><div class="loading">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">This Week's Content Plan</div>
+      <button class="btn-sm" onclick="showTab('content',null)">Full calendar →</button>
+    </div>
+    <div id="home-content"><div class="loading">Loading...</div></div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div id="tab-pipeline" class="page">
+  <div class="grid-3">
+    <div class="kpi-card"><div class="kpi-label">Pipeline Value</div><div class="kpi-value" id="pipe-total">$0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Active Leads</div><div class="kpi-value" id="pipe-active">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Conversion Rate</div><div class="kpi-value" id="pipe-conv">0%</div></div>
+  </div>
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-title" style="margin-bottom:1rem;">Pipeline Funnel</div>
+    <div class="chart-lg"><canvas id="pipe-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">All Leads</div>
+      <div style="display:flex;gap:8px;">
+        <select id="stage-filter" onchange="renderPipeTable()" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+          <option value="">All stages</option>
+          <option>Signal</option><option>Contacted</option><option>Nurturing</option><option>Call</option><option>Proposal</option><option>Negotiating</option><option>Signed</option><option>Lost</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('m-pipe')">+ Add Lead</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Company</th><th>Contact</th><th>Source</th><th>Stage</th><th>Value</th><th>Next Action</th><th>Due</th><th></th></tr></thead>
+        <tbody id="pipe-tbody"><tr><td colspan="8" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="tab-content" class="page">
+  <div class="grid-3">
+    <div class="kpi-card"><div class="kpi-label">Posts Published</div><div class="kpi-value" id="c-published">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Impressions</div><div class="kpi-value" id="c-avg">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Inbound Generated</div><div class="kpi-value" id="c-inbound">0 posts</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Upcoming Posts</div>
+        <button class="btn btn-primary" onclick="openModal('m-content')">+ Add Post</button>
+      </div>
+      <div id="upcoming-posts"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:1rem;">Impressions Over Time</div>
+      <div class="chart-lg"><canvas id="imp-chart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1rem;">Published Performance</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Platform</th><th>Topic</th><th>Impressions</th><th>Likes</th><th>Comments</th><th>Inbound</th><th></th></tr></thead>
+        <tbody id="content-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- WARM SIGNALS -->
+<div id="tab-signals" class="page">
+  <div class="grid-3">
+    <div class="kpi-card"><div class="kpi-label">New This Week</div><div class="kpi-value" id="sig-new">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Contacted</div><div class="kpi-value" id="sig-cont">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Response Rate</div><div class="kpi-value" id="sig-resp">0%</div></div>
+  </div>
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">Warm Signals Tracker</div>
+      <button class="btn btn-primary" onclick="openModal('m-signal')">+ Add Signal</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Company</th><th>Signal</th><th>Date</th><th>Content</th><th>Contacted</th><th>Responded</th><th></th></tr></thead>
+        <tbody id="sig-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div id="tab-revenue" class="page">
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Monthly Recurring</div><div class="kpi-value" id="rev-mrr">$0</div></div>
+    <div class="kpi-card"><div class="kpi-label">One-off (Month)</div><div class="kpi-value" id="rev-oo">$0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total to Date</div><div class="kpi-value" id="rev-total">$0</div></div>
+    <div class="kpi-card">
+      <div class="kpi-label">Goal Progress</div>
+      <div class="kpi-value" id="rev-pct">0%</div>
+      <div class="kpi-sub">of $15,000/month</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="rev-bar" style="background:var(--red);width:0%"></div></div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Active Clients</div>
+        <button class="btn btn-primary" onclick="openModal('m-revenue')">+ Add Revenue</button>
+      </div>
+      <div id="rev-list"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:1rem;">Revenue vs Goal</div>
+      <div class="chart-lg"><canvas id="rev-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- GOALS -->
+<div id="tab-goals" class="page">
+  <div class="vision-box">
+    <div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">The Vision — January 2027</div>
+    <div class="vision-text">
+      I open LinkedIn on a Tuesday morning. <span>47 notifications.</span> Three DMs from brand founders. A repost from a senior L'Oréal APAC director.<br><br>
+      My newsletter has <span>2,000 subscribers.</span> I haven't sent a cold message in months.<br><br>
+      Go-To Skincare is live on Amazon AU. I'm their strategic partner. Two other brands on retainer. Monthly revenue: <span>$18,000 AUD.</span><br><br>
+      Online Retailer 2027 just asked me to keynote.
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:1.25rem;">6-Month Goals Progress</div>
+      <div id="goals-list"><div class="loading">Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:1rem;">Update Goals Manually</div>
+      <div class="form-group">
+        <label class="form-label">Newsletter Subscribers</label>
+        <input type="number" class="form-input" id="inp-subs" placeholder="250">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SaaS MVP Progress: <span id="saas-lbl">0%</span></label>
+        <input type="range" min="0" max="100" value="0" id="inp-saas" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('saas-lbl').textContent=this.value+'%'">
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+        <label class="form-label" style="margin:0;">Speaking Invitation Secured</label>
+        <label class="toggle"><input type="checkbox" id="inp-speaking"><span class="toggle-slider"></span></label>
+      </div>
+      <button class="btn btn-gold" style="margin-top:1rem;" onclick="saveSettings()">Save Goals</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1rem;">Friday Reflection</div>
+    <div class="form-row" style="margin-bottom:1rem;">
+      <div class="form-group"><label class="form-label">Wins this week 🏆</label><textarea id="ref-wins" placeholder="What went well?"></textarea></div>
+      <div class="form-group"><label class="form-label">Challenges 💪</label><textarea id="ref-challenges" placeholder="What was hard?"></textarea></div>
+    </div>
+    <div class="form-group"><label class="form-label">Adjustments next week</label><textarea id="ref-adj" placeholder="What will I do differently?"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Intentionality score: <span id="score-lbl">5</span>/10</label>
+      <input type="range" min="1" max="10" value="5" id="ref-score" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('score-lbl').textContent=this.value">
+    </div>
+    <button class="btn btn-primary" onclick="saveReflection()">Save Reflection</button>
+    <div style="margin-top:1.5rem;" id="past-refs"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="m-pipe">
+  <div class="modal">
+    <div class="modal-title">Add New Lead</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Company *</label><input class="form-input" id="p-co"></div>
+      <div class="form-group"><label class="form-label">Contact Name</label><input class="form-input" id="p-cn"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Role</label><input class="form-input" id="p-role"></div>
+      <div class="form-group"><label class="form-label">Source</label>
+        <select class="form-input" id="p-src"><option>Inbound post</option><option>Newsletter</option><option>Warm signal</option><option>Event</option><option>Referral</option><option>Cold outreach</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Stage</label>
+        <select class="form-input" id="p-stage"><option>Signal</option><option>Contacted</option><option>Nurturing</option><option>Call</option><option>Proposal</option><option>Negotiating</option><option>Signed</option><option>Lost</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Est. Value (AUD)</label><input type="number" class="form-input" id="p-val" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Next Action</label><input class="form-input" id="p-na"></div>
+      <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="p-nd"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="p-notes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeModal('m-pipe')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-content">
+  <div class="modal">
+    <div class="modal-title">Add Content</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Post Date</label><input type="date" class="form-input" id="c-date"></div>
+      <div class="form-group"><label class="form-label">Platform</label><select class="form-input" id="c-plat"><option>LinkedIn</option><option>Newsletter</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Topic *</label><input class="form-input" id="c-topic"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Target Audience</label><input class="form-input" id="c-aud"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="c-status"><option>planned</option><option>drafted</option><option>published</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Impressions</label><input type="number" class="form-input" id="c-imp" value="0"></div>
+      <div class="form-group"><label class="form-label">Likes</label><input type="number" class="form-input" id="c-lk" value="0"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeModal('m-content')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-signal">
+  <div class="modal">
+    <div class="modal-title">Add Warm Signal</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="s-name"></div>
+      <div class="form-group"><label class="form-label">Company</label><input class="form-input" id="s-co"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Signal Type</label>
+        <select class="form-input" id="s-type"><option>Liked post</option><option>Commented</option><option>Connected on LinkedIn</option><option>Newsletter subscriber</option><option>Event met</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="s-date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Content they engaged with</label><input class="form-input" id="s-cont"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="s-notes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeModal('m-signal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSignal()">Save Signal</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="m-revenue">
+  <div class="modal">
+    <div class="modal-title">Add Revenue</div>
+    <div class="form-group"><label class="form-label">Client Name *</label><input class="form-input" id="r-client"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Service Type</label><select class="form-input" id="r-type"><option>Retainer</option><option>Audit</option><option>Advisory</option><option>Workshop</option></select></div>
+      <div class="form-group"><label class="form-label">Monthly Value (AUD)</label><input type="number" class="form-input" id="r-val"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Start Date</label><input type="date" class="form-input" id="r-start"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="r-status"><option>active</option><option>pending</option><option>completed</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeModal('m-revenue')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRevenue()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://modqzgdfrpypicyubpra.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vZHF6Z2RmcnB5cGljeXVicHJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMjgzMTEsImV4cCI6MjA5MjkwNDMxMX0.hME8jL8KoGtvyaRz_K_T-p8j-KzK8dXYgP8tliiXFXs';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+const TASKS = [
+  {id:'post-tue',name:'LinkedIn post — Tuesday 12pm',day:'Tue'},
+  {id:'post-thu',name:'LinkedIn post — Thursday 8am',day:'Thu'},
+  {id:'outreach',name:'5 outreach messages — Monday morning',day:'Mon'},
+  {id:'followup',name:'Follow up open conversations — Wednesday',day:'Wed'},
+  {id:'newsletter',name:'Newsletter edition (bi-weekly)',day:'Bi-wk'},
+  {id:'thinkbig',name:'Think Big Friday — full day',day:'Fri'},
+  {id:'report',name:'End-of-week reflection — Friday',day:'Fri'},
+];
+
+let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{} };
+let charts = {};
+
+const fmt = n => '$' + Number(n||0).toLocaleString('en-AU');
+const pct = (a,b) => b > 0 ? Math.min(Math.round(a/b*100),100) : 0;
+const weekStart = () => { const d=new Date(),day=d.getDay(),diff=d.getDate()-day+(day===0?-6:1),m=new Date(d.setDate(diff)); return m.toISOString().split('T')[0]; };
+const badge = (s,cls,extra='') => `<span class="badge ${cls}" ${extra}>${s}</span>`;
+const stageBadge = s => { const m={'Signal':'b-signal','Contacted':'b-contacted','Nurturing':'b-nurturing','Call':'b-call','Proposal':'b-proposal','Negotiating':'b-negotiating','Signed':'b-signed','Lost':'b-lost'}; return badge(s, m[s]||'b-signal'); };
+
+setInterval(()=>{ document.getElementById('nav-time').textContent = new Date().toLocaleString('en-AU',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); },1000);
+document.getElementById('nav-time').textContent = new Date().toLocaleString('en-AU',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+function showTab(name, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='pipeline') renderPipeChart();
+  if(name==='content') renderContentTab();
+  if(name==='revenue') renderRevenueTab();
+  if(name==='signals') renderSigTable();
+  if(name==='goals') { renderGoals(); loadPastRefs(); }
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+async function loadAll() {
+  const [t,p,c,s,r,st] = await Promise.all([
+    sb.from('weekly_tasks').select('*').eq('week_start',weekStart()),
+    sb.from('pipeline').select('*').order('next_action_date',{ascending:true}),
+    sb.from('content_calendar').select('*').order('post_date',{ascending:false}),
+    sb.from('warm_signals').select('*').order('signal_date',{ascending:false}),
+    sb.from('revenue').select('*').order('start_date',{ascending:false}),
+    sb.from('dashboard_settings').select('*')
+  ]);
+  D.tasks = t.data||[];
+  D.pipeline = p.data||[];
+  D.content = c.data||[];
+  D.signals = s.data||[];
+  D.revenue = r.data||[];
+  D.settings = {};
+  (st.data||[]).forEach(r=>D.settings[r.key]=r.value);
+  renderAll();
+}
+
+function renderAll() { renderKPIs(); renderTasks(); renderHomeFunnel(); renderUrgent(); renderHomeContent(); }
+
+function renderKPIs() {
+  const mrr = D.revenue.filter(r=>r.status==='active'&&r.service_type==='Retainer').reduce((s,r)=>s+Number(r.monthly_value),0);
+  const oo = D.revenue.filter(r=>r.status==='active'&&r.service_type!=='Retainer').reduce((s,r)=>s+Number(r.monthly_value),0);
+  const total = mrr+oo;
+  const revPct = pct(total,15000);
+  const color = v => v>=80?'var(--green)':v>=50?'var(--amber)':'var(--red)';
+
+  document.getElementById('kpi-rev').textContent = fmt(total);
+  document.getElementById('kpi-rev-bar').style.cssText = `background:${color(revPct)};width:${revPct}%`;
+  const clients = D.revenue.filter(r=>r.status==='active').length;
+  document.getElementById('kpi-clients').textContent = clients;
+  document.getElementById('kpi-clients-bar').style.cssText = `background:var(--amber);width:${pct(clients,4)}%`;
+  const subs = Number(D.settings.newsletter_subscribers||250);
+  document.getElementById('kpi-subs').textContent = subs.toLocaleString();
+  document.getElementById('kpi-subs-bar').style.cssText = `background:var(--blue);width:${pct(subs,1000)}%`;
+  const done = D.tasks.filter(t=>t.completed).length;
+  document.getElementById('kpi-score').textContent = done+'/'+TASKS.length;
+  document.getElementById('kpi-score-bar').style.cssText = `background:var(--green);width:${pct(done,TASKS.length)}%`;
+
+  // pipeline tab
+  const pTotal = D.pipeline.reduce((s,r)=>s+Number(r.estimated_value),0);
+  const active = D.pipeline.filter(p=>!['Signed','Lost'].includes(p.stage)).length;
+  const signed = D.pipeline.filter(p=>p.stage==='Signed').length;
+  document.getElementById('pipe-total').textContent = fmt(pTotal);
+  document.getElementById('pipe-active').textContent = active;
+  document.getElementById('pipe-conv').textContent = D.pipeline.length>0?Math.round(signed/D.pipeline.length*100)+'%':'0%';
+
+  // content tab
+  const pub = D.content.filter(c=>c.status==='published');
+  const avgImp = pub.length>0?Math.round(pub.reduce((s,c)=>s+c.impressions,0)/pub.length):0;
+  document.getElementById('c-published').textContent = pub.length;
+  document.getElementById('c-avg').textContent = avgImp.toLocaleString();
+  document.getElementById('c-inbound').textContent = pub.filter(c=>c.generated_inbound).length+' posts';
+
+  // signals tab
+  const w7 = new Date(Date.now()-7*86400000).toISOString().split('T')[0];
+  const cont = D.signals.filter(s=>s.contacted).length;
+  const resp = D.signals.filter(s=>s.responded).length;
+  document.getElementById('sig-new').textContent = D.signals.filter(s=>s.signal_date>=w7).length;
+  document.getElementById('sig-cont').textContent = cont;
+  document.getElementById('sig-resp').textContent = cont>0?Math.round(resp/cont*100)+'%':'0%';
+
+  // revenue tab
+  document.getElementById('rev-mrr').textContent = fmt(mrr);
+  document.getElementById('rev-oo').textContent = fmt(oo);
+  document.getElementById('rev-total').textContent = fmt(total);
+  document.getElementById('rev-pct').textContent = revPct+'%';
+  document.getElementById('rev-bar').style.cssText = `background:${color(revPct)};width:${revPct}%`;
+}
+
+function renderTasks() {
+  const el = document.getElementById('tasks-list');
+  el.innerHTML = TASKS.map(t=>{
+    const rec = D.tasks.find(r=>r.task_id===t.id);
+    const done = rec?.completed||false;
+    return `<div class="task-item"><input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.id}',this.checked)"><span class="task-label ${done?'done':''}">${t.name}</span><span class="task-day">${t.day}</span></div>`;
+  }).join('');
+  const done = D.tasks.filter(t=>t.completed).length;
+  document.getElementById('tasks-label').textContent = `${done} of ${TASKS.length} completed`;
+  document.getElementById('tasks-bar').style.width = pct(done,TASKS.length)+'%';
+}
+
+async function toggleTask(taskId, checked) {
+  const week = weekStart();
+  const def = TASKS.find(t=>t.id===taskId);
+  const existing = D.tasks.find(t=>t.task_id===taskId);
+  if(existing) {
+    await sb.from('weekly_tasks').update({completed:checked}).eq('id',existing.id);
+    existing.completed = checked;
+  } else {
+    const {data} = await sb.from('weekly_tasks').insert({task_id:taskId,task_name:def.name,task_day:def.day,completed:checked,week_start:week}).select();
+    if(data) D.tasks.push(data[0]);
+  }
+  renderTasks(); renderKPIs();
+}
+
+async function resetWeek() {
+  await sb.from('weekly_tasks').delete().eq('week_start',weekStart());
+  D.tasks=[];
+  renderTasks(); renderKPIs();
+}
+
+function renderHomeFunnel() {
+  const stages=['Signal','Contacted','Nurturing','Call','Proposal','Negotiating','Signed'];
+  const counts=stages.map(s=>D.pipeline.filter(p=>p.stage===s).length);
+  const ctx=document.getElementById('home-funnel');
+  if(!ctx)return;
+  if(charts.homeFunnel)charts.homeFunnel.destroy();
+  charts.homeFunnel=new Chart(ctx,{type:'bar',data:{labels:stages,datasets:[{data:counts,backgroundColor:['#94A3B8','#3B82F6','#F59E0B','#F97316','#8B5CF6','#EC4899','#10B981'],borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#F1F5F9'},ticks:{stepSize:1}}}}});
+}
+
+function renderUrgent() {
+  const urgent=D.pipeline.filter(p=>p.next_action_date&&!['Signed','Lost'].includes(p.stage)).slice(0,3);
+  document.getElementById('urgent-leads').innerHTML=urgent.length===0?'<div style="color:var(--muted);font-size:13px;padding:8px 0;">No urgent actions — great!</div>':urgent.map(p=>`<div class="urgent-item"><div><div style="font-size:14px;font-weight:500;">${p.company}</div><div style="font-size:12px;color:var(--muted);">${p.next_action||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;">${stageBadge(p.stage)}<div style="font-size:12px;color:${new Date(p.next_action_date)<new Date()?'var(--red)':'var(--muted)'};font-weight:500;">${p.next_action_date}</div></div></div>`).join('');
+}
+
+function renderHomeContent() {
+  const upcoming=D.content.filter(c=>c.status!=='published').slice(0,2);
+  document.getElementById('home-content').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts — add some!</div>':`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${upcoming.map(c=>`<div style="background:var(--bg);border-radius:8px;padding:12px;"><div style="display:flex;gap:6px;margin-bottom:6px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span><span class="badge b-${c.status}">${c.status}</span></div><div style="font-size:14px;font-weight:500;">${c.topic}</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div></div>`).join('')}</div>`;
+}
+
+function renderPipeChart() {
+  const stages=['Signal','Contacted','Nurturing','Call','Proposal','Negotiating','Signed'];
+  const counts=stages.map(s=>D.pipeline.filter(p=>p.stage===s).length);
+  const ctx=document.getElementById('pipe-chart');
+  if(!ctx)return;
+  if(charts.pipe)charts.pipe.destroy();
+  charts.pipe=new Chart(ctx,{type:'bar',data:{labels:stages,datasets:[{label:'Leads',data:counts,backgroundColor:['#94A3B8','#3B82F6','#F59E0B','#F97316','#8B5CF6','#EC4899','#10B981'],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#F1F5F9'},ticks:{stepSize:1}}}}});
+  renderPipeTable();
+}
+
+function renderPipeTable() {
+  const f=document.getElementById('stage-filter')?.value;
+  const data=f?D.pipeline.filter(p=>p.stage===f):D.pipeline;
+  document.getElementById('pipe-tbody').innerHTML=data.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No leads yet</td></tr>':data.map(p=>`<tr><td><strong>${p.company}</strong></td><td>${p.contact_name||'—'}<br><span style="font-size:11px;color:var(--muted);">${p.contact_role||''}</span></td><td>${p.source||'—'}</td><td>${stageBadge(p.stage)}</td><td>${fmt(p.estimated_value)}</td><td>${p.next_action||'—'}</td><td style="color:${p.next_action_date&&new Date(p.next_action_date)<new Date()?'var(--red)':'var(--text)'}">${p.next_action_date||'—'}</td><td><button class="btn-sm" onclick="delLead('${p.id}')">✕</button></td></tr>`).join('');
+}
+
+async function saveLead() {
+  const co=document.getElementById('p-co').value;
+  if(!co)return alert('Company required');
+  await sb.from('pipeline').insert({company:co,contact_name:document.getElementById('p-cn').value,contact_role:document.getElementById('p-role').value,source:document.getElementById('p-src').value,stage:document.getElementById('p-stage').value,estimated_value:Number(document.getElementById('p-val').value)||0,next_action:document.getElementById('p-na').value,next_action_date:document.getElementById('p-nd').value||null,notes:document.getElementById('p-notes').value});
+  closeModal('m-pipe');
+  await loadAll();
+}
+
+async function delLead(id) {
+  if(!confirm('Delete this lead?'))return;
+  await sb.from('pipeline').delete().eq('id',id);
+  await loadAll();
+}
+
+function renderContentTab() {
+  const pub=D.content.filter(c=>c.status==='published').slice().reverse();
+  const ctx=document.getElementById('imp-chart');
+  if(ctx){
+    if(charts.imp)charts.imp.destroy();
+    charts.imp=new Chart(ctx,{type:'line',data:{labels:pub.map(c=>c.post_date),datasets:[{label:'Impressions',data:pub.map(c=>c.impressions),borderColor:'#4A90D9',backgroundColor:'rgba(74,144,217,0.1)',fill:true,tension:0.4,pointRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#F1F5F9'}}}}});
+  }
+  const upcoming=D.content.filter(c=>c.status!=='published');
+  document.getElementById('upcoming-posts').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts</div>':upcoming.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);"><div style="display:flex;gap:6px;margin-bottom:4px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span><span class="badge b-${c.status}">${c.status}</span></div><div style="font-size:14px;font-weight:500;">${c.topic}</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div><div style="margin-top:6px;display:flex;gap:6px;"><button class="btn-sm" onclick="markPub('${c.id}')">Mark Published</button><button class="btn-sm" onclick="delContent('${c.id}')">Delete</button></div></div>`).join('');
+  document.getElementById('content-tbody').innerHTML=pub.reverse().map(c=>`<tr><td>${c.post_date}</td><td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span></td><td style="max-width:200px;">${c.topic}</td><td>${(c.impressions||0).toLocaleString()}</td><td>${c.likes||0}</td><td>${c.comments||0}</td><td><span class="badge" style="background:${c.generated_inbound?'#D1FAE5':'#F1F5F9'};color:${c.generated_inbound?'#065F46':'#64748B'}">${c.generated_inbound?'Yes':'No'}</span></td><td><button class="btn-sm" onclick="delContent('${c.id}')">✕</button></td></tr>`).join('');
+}
+
+async function saveContent() {
+  const topic=document.getElementById('c-topic').value;
+  if(!topic)return alert('Topic required');
+  await sb.from('content_calendar').insert({post_date:document.getElementById('c-date').value||null,platform:document.getElementById('c-plat').value,topic,target_audience:document.getElementById('c-aud').value,status:document.getElementById('c-status').value,impressions:Number(document.getElementById('c-imp').value)||0,likes:Number(document.getElementById('c-lk').value)||0});
+  closeModal('m-content'); await loadAll(); renderContentTab();
+}
+
+async function markPub(id) {
+  await sb.from('content_calendar').update({status:'published'}).eq('id',id);
+  await loadAll(); renderContentTab();
+}
+
+async function delContent(id) {
+  if(!confirm('Delete?'))return;
+  await sb.from('content_calendar').delete().eq('id',id);
+  await loadAll(); renderContentTab();
+}
+
+function renderSigTable() {
+  const typeStyle={'Liked post':'#DBEAFE;#1D4ED8','Commented':'#D1FAE5;#065F46','Connected on LinkedIn':'#FEF3C7;#92400E','Newsletter subscriber':'#EDE9FE;#6D28D9','Event met':'#CCFBF1;#134E4A'};
+  document.getElementById('sig-tbody').innerHTML=D.signals.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No signals yet</td></tr>':D.signals.map(s=>{const [bg,col]=(typeStyle[s.signal_type]||'#F1F5F9;#64748B').split(';');return`<tr><td><strong>${s.name}</strong></td><td>${s.company||'—'}</td><td><span class="badge" style="background:${bg};color:${col}">${s.signal_type}</span></td><td>${s.signal_date||'—'}</td><td style="max-width:150px;">${s.content_engaged||'—'}</td><td><label class="toggle"><input type="checkbox" ${s.contacted?'checked':''} onchange="updSig('${s.id}','contacted',this.checked)"><span class="toggle-slider"></span></label></td><td><label class="toggle"><input type="checkbox" ${s.responded?'checked':''} onchange="updSig('${s.id}','responded',this.checked)"><span class="toggle-slider"></span></label></td><td><button class="btn-sm" onclick="delSig('${s.id}')">✕</button></td></tr>`;}).join('');
+}
+
+async function saveSignal() {
+  const name=document.getElementById('s-name').value;
+  if(!name)return alert('Name required');
+  await sb.from('warm_signals').insert({name,company:document.getElementById('s-co').value,signal_type:document.getElementById('s-type').value,signal_date:document.getElementById('s-date').value||null,content_engaged:document.getElementById('s-cont').value,notes:document.getElementById('s-notes').value});
+  closeModal('m-signal'); await loadAll(); renderSigTable();
+}
+
+async function updSig(id,field,val) {
+  await sb.from('warm_signals').update({[field]:val}).eq('id',id);
+  const s=D.signals.find(s=>s.id===id); if(s)s[field]=val;
+  renderKPIs();
+}
+
+async function delSig(id) {
+  if(!confirm('Delete?'))return;
+  await sb.from('warm_signals').delete().eq('id',id);
+  await loadAll(); renderSigTable();
+}
+
+function renderRevenueTab() {
+  const el=document.getElementById('rev-list');
+  el.innerHTML=D.revenue.length===0?'<div style="color:var(--muted);font-size:13px;">No clients yet — add your first!</div>':D.revenue.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:14px;font-weight:600;">${r.client_name}</div><div style="font-size:12px;color:var(--muted);">${r.service_type} · Since ${r.start_date||'—'}</div></div><div style="display:flex;align-items:center;gap:12px;"><span class="badge" style="background:${r.status==='active'?'#D1FAE5':'#F1F5F9'};color:${r.status==='active'?'#065F46':'#64748B'}">${r.status}</span><strong style="font-size:16px;">${fmt(r.monthly_value)}</strong><button class="btn-sm" onclick="delRev('${r.id}')">✕</button></div></div>`).join('');
+  const total=D.revenue.filter(r=>r.status==='active').reduce((s,r)=>s+Number(r.monthly_value),0);
+  const ctx=document.getElementById('rev-chart');
+  if(ctx){
+    if(charts.rev)charts.rev.destroy();
+    charts.rev=new Chart(ctx,{type:'bar',data:{labels:['Current MRR','Goal ($15K)'],datasets:[{data:[total,15000],backgroundColor:[total>=15000?'#2A9D8F':total>=7500?'#E9C46A':'#E63946','#E2E8F0'],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'#F1F5F9'},ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+  }
+}
+
+async function saveRevenue() {
+  const client=document.getElementById('r-client').value;
+  if(!client)return alert('Client name required');
+  await sb.from('revenue').insert({client_name:client,service_type:document.getElementById('r-type').value,monthly_value:Number(document.getElementById('r-val').value)||0,start_date:document.getElementById('r-start').value||null,status:document.getElementById('r-status').value});
+  closeModal('m-revenue'); await loadAll(); renderRevenueTab();
+}
+
+async function delRev(id) {
+  if(!confirm('Delete?'))return;
+  await sb.from('revenue').delete().eq('id',id);
+  await loadAll(); renderRevenueTab();
+}
+
+function renderGoals() {
+  const mrr=D.revenue.filter(r=>r.status==='active').reduce((s,r)=>s+Number(r.monthly_value),0);
+  const clients=D.revenue.filter(r=>r.status==='active').length;
+  const subs=Number(D.settings.newsletter_subscribers||250);
+  const saas=Number(D.settings.saas_mvp_percent||0);
+  const speaking=D.settings.speaking_invitation==='true';
+  const inboundLeads=D.pipeline.filter(p=>['Inbound post','Newsletter','Warm signal'].includes(p.source)).length;
+  const inboundPct=D.pipeline.length>0?Math.round(inboundLeads/D.pipeline.length*100):0;
+
+  const goals=[
+    {label:'Monthly Revenue (AUD)',cur:mrr,target:15000,fmt:fmt,color:'var(--green)'},
+    {label:'Active Clients',cur:clients,target:4,fmt:v=>v,color:'var(--blue)'},
+    {label:'Newsletter Subscribers',cur:subs,target:1000,fmt:v=>v.toLocaleString(),color:'var(--purple)'},
+    {label:'SaaS MVP Progress',cur:saas,target:100,fmt:v=>v+'%',color:'var(--amber)'},
+    {label:'Speaking Invitation',cur:speaking?1:0,target:1,fmt:v=>v?'✓ Secured':'Not yet',color:'var(--gold)'},
+    {label:'Inbound-Only Pipeline',cur:inboundPct,target:100,fmt:v=>v+'%',color:'var(--green)'},
+  ];
+
+  document.getElementById('goals-list').innerHTML=goals.map(g=>{
+    const p=pct(g.cur,g.target);
+    const status=p>=80?'🟢 On track':p>=40?'🟡 In progress':'🔴 Behind';
+    return `<div class="goal-item"><div class="goal-header"><span style="font-size:14px;">${g.label}</span><span style="display:flex;gap:8px;align-items:center;"><span style="font-size:11px;color:var(--muted);">${status}</span><span style="font-size:14px;font-weight:600;color:${g.color}">${p}%</span></span></div><div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${g.fmt(g.cur)} of ${g.fmt(g.target)}</div><div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${g.color}"></div></div></div>`;
+  }).join('');
+
+  document.getElementById('inp-subs').value=subs;
+  document.getElementById('inp-saas').value=saas;
+  document.getElementById('saas-lbl').textContent=saas+'%';
+  document.getElementById('inp-speaking').checked=speaking;
+}
+
+async function saveSettings() {
+  const subs=document.getElementById('inp-subs').value;
+  const saas=document.getElementById('inp-saas').value;
+  const speaking=document.getElementById('inp-speaking').checked;
+  await sb.from('dashboard_settings').upsert([
+    {key:'newsletter_subscribers',value:subs},
+    {key:'saas_mvp_percent',value:saas},
+    {key:'speaking_invitation',value:speaking.toString()}
+  ],{onConflict:'key'});
+  await loadAll(); renderGoals();
+  alert('Goals saved!');
+}
+
+async function saveReflection() {
+  await sb.from('weekly_reflections').upsert({week_start:weekStart(),wins:document.getElementById('ref-wins').value,challenges:document.getElementById('ref-challenges').value,adjustments:document.getElementById('ref-adj').value,score:Number(document.getElementById('ref-score').value)},{onConflict:'week_start'});
+  await loadPastRefs();
+  alert('Reflection saved!');
+}
+
+async function loadPastRefs() {
+  const {data}=await sb.from('weekly_reflections').select('*').order('week_start',{ascending:false}).limit(4);
+  const el=document.getElementById('past-refs');
+  if(!data||data.length===0){el.innerHTML='';return;}
+  el.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Past Reflections</div>`+data.map(r=>`<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;font-weight:600;">Week of ${r.week_start}</span><span style="font-size:13px;color:var(--gold);font-weight:600;">Score: ${r.score}/10</span></div>${r.wins?`<div style="font-size:12px;margin-bottom:4px;"><strong>Wins:</strong> ${r.wins}</div>`:''}${r.challenges?`<div style="font-size:12px;margin-bottom:4px;"><strong>Challenges:</strong> ${r.challenges}</div>`:''}${r.adjustments?`<div style="font-size:12px;"><strong>Adjustments:</strong> ${r.adjustments}</div>`:''}</div>`).join('');
+}
+
+loadAll();
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>
