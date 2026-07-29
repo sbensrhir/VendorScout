@@ -114,7 +114,8 @@
   <div class="pin-logo">VS</div>
   <div class="pin-title">VendorScout</div>
   <div class="pin-sub">Enter your PIN to continue</div>
-  <input type="tel" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="checkPin(this.value)" autofocus>
+  <input type="number" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off" autofocus style="font-size:28px;letter-spacing:12px;text-align:center;width:180px;padding:12px;border:2px solid rgba(200,169,122,0.3);border-radius:12px;background:rgba(255,255,255,0.05);color:white;outline:none;font-family:monospace;-moz-appearance:textfield;">
+  <button onclick="submitPin()" style="background:var(--gold,#C8A97A);color:#0D1B2A;border:none;border-radius:10px;padding:12px 32px;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;">Enter</button>
   <div class="pin-error" id="pin-error"></div>
 </div>
 
@@ -2074,9 +2075,17 @@ document.head.appendChild(greetingStyle);
 
 const DASHBOARD_PIN = '2015';
 
+function submitPin() {
+  const val = String(document.getElementById('pin-input').value).trim();
+  checkPin(val);
+}
+
 function checkPin(val) {
-  const clean = val.trim().replace(/\s/g,'');
-  if(clean.length < 4) { document.getElementById('pin-error').textContent = ''; return; }
+  const clean = String(val).trim();
+  if(clean.length < 4) {
+    document.getElementById('pin-error').textContent = 'Enter 4 digits';
+    return;
+  }
   if(clean === DASHBOARD_PIN) {
     sessionStorage.setItem('vs-unlocked','true');
     document.getElementById('pin-screen').classList.add('hidden');
@@ -2085,9 +2094,16 @@ function checkPin(val) {
   } else {
     document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
     document.getElementById('pin-input').value = '';
-    setTimeout(()=>{ if(document.getElementById('pin-error')) document.getElementById('pin-error').textContent=''; }, 2000);
+    setTimeout(()=>{ const e=document.getElementById('pin-error'); if(e) e.textContent=''; }, 2000);
   }
 }
+
+// Allow Enter key
+document.addEventListener('keydown', function(e) {
+  if(e.key==='Enter' && !document.getElementById('pin-screen').classList.contains('hidden')) {
+    submitPin();
+  }
+});
 
 // Already unlocked this session — skip PIN
 if(sessionStorage.getItem('vs-unlocked')==='true') {
