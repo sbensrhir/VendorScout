@@ -1982,14 +1982,6 @@ const ACTION_SENTENCES = {
 // Animated emoji components as inline SVG/HTML
 const ANIMATIONS = {
   sun: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;">
-    <style>
-      @keyframes vs-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-      @keyframes vs-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-      @keyframes vs-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-      @keyframes vs-twinkle{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
-      @keyframes vs-rock{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
-      @keyframes vs-glow{0%,100%{filter:drop-shadow(0 0 4px #FCD34D)}50%{filter:drop-shadow(0 0 12px #FCD34D)}}
-    </style>
     <svg viewBox="0 0 70 70" width="70" height="70" style="animation:vs-glow 2s ease-in-out infinite;">
       <g transform="translate(35,35)" style="animation:vs-spin 12s linear infinite;transform-origin:0 0;">
         ${[0,45,90,135,180,225,270,315].map(a=>`
