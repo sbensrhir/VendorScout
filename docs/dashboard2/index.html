@@ -109,6 +109,7 @@
     <button class="nav-tab" onclick="showTab('signals',this)">Warm Signals</button>
     <button class="nav-tab" onclick="showTab('revenue',this)">Revenue</button>
     <button class="nav-tab" onclick="showTab('goals',this)">Goals</button>
+    <button class="nav-tab" onclick="showTab('knowledge',this)">Knowledge</button>
   </div>
   <div class="nav-time" id="nav-time"></div>
 </nav>
@@ -354,6 +355,10 @@
         <label class="form-label">SaaS MVP Progress: <span id="saas-lbl">0%</span></label>
         <input type="range" min="0" max="100" value="0" id="inp-saas" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('saas-lbl').textContent=this.value+'%'">
       </div>
+      <div class="form-group">
+        <label class="form-label">Client Workshops Delivered: <span id="workshop-lbl">0</span></label>
+        <input type="range" min="0" max="10" value="0" id="inp-workshops" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('workshop-lbl').textContent=this.value">
+      </div>
       <div class="form-group" style="display:flex;align-items:center;gap:12px;">
         <label class="form-label" style="margin:0;">Speaking Invitation Secured</label>
         <label class="toggle"><input type="checkbox" id="inp-speaking"><span class="toggle-slider"></span></label>
@@ -361,19 +366,164 @@
       <button class="btn btn-gold" style="margin-top:1rem;" onclick="saveSettings()">Save Goals</button>
     </div>
   </div>
-  <div class="card">
-    <div class="section-title" style="margin-bottom:1rem;">Friday Reflection</div>
-    <div class="form-row" style="margin-bottom:1rem;">
-      <div class="form-group"><label class="form-label">Wins this week 🏆</label><textarea id="ref-wins" placeholder="What went well?"></textarea></div>
-      <div class="form-group"><label class="form-label">Challenges 💪</label><textarea id="ref-challenges" placeholder="What was hard?"></textarea></div>
+
+  <!-- Friday Reflection -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-header">
+      <div class="section-title">Friday Reflection</div>
+      <span style="font-size:12px;color:var(--muted);">Week of <strong id="current-week-label"></strong></span>
     </div>
-    <div class="form-group"><label class="form-label">Adjustments next week</label><textarea id="ref-adj" placeholder="What will I do differently?"></textarea></div>
+    <div class="form-row" style="margin-bottom:1rem;">
+      <div class="form-group"><label class="form-label">🏆 Wins this week</label><textarea id="ref-wins" placeholder="What went well? What are you proud of?"></textarea></div>
+      <div class="form-group"><label class="form-label">💪 Challenges</label><textarea id="ref-challenges" placeholder="What was hard? What held you back?"></textarea></div>
+    </div>
+    <div class="form-group"><label class="form-label">🔄 What I'm adjusting next week</label><textarea id="ref-adj" placeholder="What will I do differently? What do I commit to?"></textarea></div>
     <div class="form-group">
-      <label class="form-label">Intentionality score: <span id="score-lbl">5</span>/10</label>
+      <label class="form-label">Intentionality score this week: <span id="score-lbl" style="color:var(--gold);font-weight:600;font-size:16px;">5</span>/10</label>
       <input type="range" min="1" max="10" value="5" id="ref-score" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('score-lbl').textContent=this.value">
     </div>
     <button class="btn btn-primary" onclick="saveReflection()">Save Reflection</button>
-    <div style="margin-top:1.5rem;" id="past-refs"></div>
+  </div>
+
+  <!-- Reflection History -->
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1.25rem;">Reflection History</div>
+    <div id="past-refs"><div class="loading">Loading...</div></div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE -->
+<div id="tab-knowledge" class="page">
+  <div class="kpi-grid" style="margin-bottom:1.5rem;">
+    <div class="kpi-card"><div class="kpi-label">Training Resources</div><div class="kpi-value" id="k-total">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Completed</div><div class="kpi-value" id="k-completed">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Certifications</div><div class="kpi-value" id="k-certs">0</div></div>
+    <div class="kpi-card"><div class="kpi-label">Active Certifications</div><div class="kpi-value" id="k-certs-active">0</div></div>
+  </div>
+
+  <!-- Training Resources -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-header">
+      <div class="section-title">Training Resources</div>
+      <div style="display:flex;gap:8px;">
+        <select id="k-category-filter" onchange="renderKnowledge()" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;">
+          <option value="">All categories</option>
+          <option>Amazon Strategy</option>
+          <option>Advertising & PPC</option>
+          <option>AU Retail Ecosystem</option>
+          <option>Traffic & Conversion</option>
+          <option>Channel Economics</option>
+          <option>Business Development</option>
+          <option>Other</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('m-training')">+ Add Resource</button>
+      </div>
+    </div>
+    <div id="training-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-top:0.5rem;">
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Certifications -->
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">Certifications</div>
+      <button class="btn btn-primary" onclick="openModal('m-cert')">+ Add Certification</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Certification</th><th>Issuer</th><th>Category</th><th>Date Earned</th><th>Expiry</th><th>Status</th><th></th></tr></thead>
+        <tbody id="certs-tbody"><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TRAINING MODAL -->
+<div class="modal-overlay" id="m-training">
+  <div class="modal">
+    <div class="modal-title" id="training-modal-title">Add Training Resource</div>
+    <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="tr-title" placeholder="e.g. Amazon Ads Certification Course"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Category</label>
+        <select class="form-input" id="tr-category">
+          <option>Amazon Strategy</option>
+          <option>Advertising & PPC</option>
+          <option>AU Retail Ecosystem</option>
+          <option>Traffic & Conversion</option>
+          <option>Channel Economics</option>
+          <option>Business Development</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-input" id="tr-type">
+          <option>Course</option>
+          <option>Book</option>
+          <option>Podcast</option>
+          <option>Article / Report</option>
+          <option>Video</option>
+          <option>Workshop</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">URL / Link</label><input class="form-input" id="tr-url" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-input" id="tr-status">
+          <option>Not started</option>
+          <option>In progress</option>
+          <option>Completed</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="tr-notes" placeholder="Key takeaways, why it's useful..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeModal('m-training');editingTrainingId=null;">Cancel</button>
+      <button class="btn btn-primary" id="training-save-btn" onclick="saveTraining()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CERTIFICATION MODAL -->
+<div class="modal-overlay" id="m-cert">
+  <div class="modal">
+    <div class="modal-title" id="cert-modal-title">Add Certification</div>
+    <div class="form-group"><label class="form-label">Certification Name *</label><input class="form-input" id="ce-name" placeholder="e.g. Amazon Ads Certification"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Issuer</label><input class="form-input" id="ce-issuer" placeholder="e.g. Amazon, Google, Meta"></div>
+      <div class="form-group"><label class="form-label">Category</label>
+        <select class="form-input" id="ce-category">
+          <option>Amazon Strategy</option>
+          <option>Advertising & PPC</option>
+          <option>AU Retail Ecosystem</option>
+          <option>Traffic & Conversion</option>
+          <option>Channel Economics</option>
+          <option>Business Development</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date Earned</label><input type="date" class="form-input" id="ce-date"></div>
+      <div class="form-group"><label class="form-label">Expiry Date</label><input type="date" class="form-input" id="ce-expiry"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-input" id="ce-status">
+          <option>Planned</option>
+          <option>In Progress</option>
+          <option>Active</option>
+          <option>Expired</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Certificate URL</label><input class="form-input" id="ce-url" placeholder="https://..."></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeModal('m-cert');editingCertId=null;">Cancel</button>
+      <button class="btn btn-primary" id="cert-save-btn" onclick="saveCert()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -497,10 +647,12 @@ const TASKS = [
   {id:'report',name:'End-of-week reflection — Friday',day:'Fri'},
 ];
 
-let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{} };
+let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{}, training:[], certs:[] };
 let charts = {};
 let editingLeadId = null;
 let editingContentId = null;
+let editingTrainingId = null;
+let editingCertId = null;
 let currentPeriod = 'all';
 
 function setPeriod(period, btn) {
@@ -551,20 +703,23 @@ function showTab(name, btn) {
   if(name==='content') renderContentTab();
   if(name==='revenue') renderRevenueTab();
   if(name==='signals') renderSigTable();
-  if(name==='goals') { renderGoals(); loadPastRefs(); }
+  if(name==='goals') { renderGoals(); loadPastRefs(); document.getElementById('current-week-label').textContent = weekStart(); }
+  if(name==='knowledge') renderKnowledge();
 }
 
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
 async function loadAll() {
-  const [t,p,c,s,r,st] = await Promise.all([
+  const [t,p,c,s,r,st,tr,ce] = await Promise.all([
     sb.from('weekly_tasks').select('*').eq('week_start',weekStart()),
     sb.from('pipeline').select('*').order('next_action_date',{ascending:true}),
     sb.from('content_calendar').select('*').order('post_date',{ascending:false}),
     sb.from('warm_signals').select('*').order('signal_date',{ascending:false}),
     sb.from('revenue').select('*').order('start_date',{ascending:false}),
-    sb.from('dashboard_settings').select('*')
+    sb.from('dashboard_settings').select('*'),
+    sb.from('training_resources').select('*').order('created_at',{ascending:false}),
+    sb.from('certifications').select('*').order('date_earned',{ascending:false})
   ]);
   D.tasks = t.data||[];
   D.pipeline = p.data||[];
@@ -573,6 +728,8 @@ async function loadAll() {
   D.revenue = r.data||[];
   D.settings = {};
   (st.data||[]).forEach(r=>D.settings[r.key]=r.value);
+  D.training = tr.data||[];
+  D.certs = ce.data||[];
   renderAll();
 }
 
@@ -1059,54 +1216,256 @@ function renderGoals() {
   const subs=Number(D.settings.newsletter_subscribers||250);
   const saas=Number(D.settings.saas_mvp_percent||0);
   const speaking=D.settings.speaking_invitation==='true';
+  const workshops=Number(D.settings.workshops_delivered||0);
   const inboundLeads=D.pipeline.filter(p=>['Inbound post','Newsletter','Warm signal'].includes(p.source)).length;
   const inboundPct=D.pipeline.length>0?Math.round(inboundLeads/D.pipeline.length*100):0;
 
   const goals=[
-    {label:'Monthly Revenue (AUD)',cur:mrr,target:15000,fmt:fmt,color:'var(--green)'},
-    {label:'Active Clients',cur:clients,target:4,fmt:v=>v,color:'var(--blue)'},
-    {label:'Newsletter Subscribers',cur:subs,target:1000,fmt:v=>v.toLocaleString(),color:'var(--purple)'},
-    {label:'SaaS MVP Progress',cur:saas,target:100,fmt:v=>v+'%',color:'var(--amber)'},
-    {label:'Speaking Invitation',cur:speaking?1:0,target:1,fmt:v=>v?'✓ Secured':'Not yet',color:'var(--gold)'},
-    {label:'Inbound-Only Pipeline',cur:inboundPct,target:100,fmt:v=>v+'%',color:'var(--green)'},
+    {label:'Monthly Revenue (AUD)',cur:mrr,target:15000,fmt:fmt,color:'var(--green)',eta:'Jan 2027'},
+    {label:'Active Clients',cur:clients,target:4,fmt:v=>v+' clients',color:'var(--blue)',eta:'Oct 2026'},
+    {label:'Newsletter Subscribers',cur:subs,target:1000,fmt:v=>v.toLocaleString(),color:'var(--purple)',eta:'Dec 2026'},
+    {label:'SaaS MVP Progress',cur:saas,target:100,fmt:v=>v+'%',color:'var(--amber)',eta:'Jan 2027'},
+    {label:'Client Workshops Delivered',cur:workshops,target:5,fmt:v=>v+' sessions',color:'var(--orange)',eta:'Jan 2027'},
+    {label:'Speaking Invitation',cur:speaking?1:0,target:1,fmt:v=>v?'✓ Secured':'Not yet',color:'var(--gold)',eta:'Online Retailer 2027'},
+    {label:'Inbound-Only Pipeline',cur:inboundPct,target:100,fmt:v=>v+'%',color:'var(--green)',eta:'Jan 2027'},
   ];
 
   document.getElementById('goals-list').innerHTML=goals.map(g=>{
     const p=pct(g.cur,g.target);
     const status=p>=80?'🟢 On track':p>=40?'🟡 In progress':'🔴 Behind';
-    return `<div class="goal-item"><div class="goal-header"><span style="font-size:14px;">${g.label}</span><span style="display:flex;gap:8px;align-items:center;"><span style="font-size:11px;color:var(--muted);">${status}</span><span style="font-size:14px;font-weight:600;color:${g.color}">${p}%</span></span></div><div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${g.fmt(g.cur)} of ${g.fmt(g.target)}</div><div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${g.color}"></div></div></div>`;
+    return `<div class="goal-item">
+      <div class="goal-header">
+        <span style="font-size:14px;font-weight:500;">${g.label}</span>
+        <span style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;color:var(--muted);">${status}</span>
+          <span style="font-size:14px;font-weight:700;color:${g.color}">${p}%</span>
+        </span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:12px;color:var(--muted);">${g.fmt(g.cur)} of ${g.fmt(g.target)}</span>
+        <span style="font-size:11px;color:var(--muted);">ETA: ${g.eta}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${g.color}"></div></div>
+    </div>`;
   }).join('');
 
   document.getElementById('inp-subs').value=subs;
   document.getElementById('inp-saas').value=saas;
   document.getElementById('saas-lbl').textContent=saas+'%';
   document.getElementById('inp-speaking').checked=speaking;
+  document.getElementById('inp-workshops').value=workshops;
+  document.getElementById('workshop-lbl').textContent=workshops;
 }
 
 async function saveSettings() {
   const subs=document.getElementById('inp-subs').value;
   const saas=document.getElementById('inp-saas').value;
   const speaking=document.getElementById('inp-speaking').checked;
+  const workshops=document.getElementById('inp-workshops').value;
   await sb.from('dashboard_settings').upsert([
     {key:'newsletter_subscribers',value:subs},
     {key:'saas_mvp_percent',value:saas},
-    {key:'speaking_invitation',value:speaking.toString()}
+    {key:'speaking_invitation',value:speaking.toString()},
+    {key:'workshops_delivered',value:workshops}
   ],{onConflict:'key'});
   await loadAll(); renderGoals();
   alert('Goals saved!');
 }
 
 async function saveReflection() {
-  await sb.from('weekly_reflections').upsert({week_start:weekStart(),wins:document.getElementById('ref-wins').value,challenges:document.getElementById('ref-challenges').value,adjustments:document.getElementById('ref-adj').value,score:Number(document.getElementById('ref-score').value)},{onConflict:'week_start'});
+  await sb.from('weekly_reflections').upsert({
+    week_start:weekStart(),
+    wins:document.getElementById('ref-wins').value,
+    challenges:document.getElementById('ref-challenges').value,
+    adjustments:document.getElementById('ref-adj').value,
+    score:Number(document.getElementById('ref-score').value)
+  },{onConflict:'week_start'});
   await loadPastRefs();
-  alert('Reflection saved!');
+  alert('Reflection saved! 🎯');
 }
 
 async function loadPastRefs() {
-  const {data}=await sb.from('weekly_reflections').select('*').order('week_start',{ascending:false}).limit(4);
+  const {data}=await sb.from('weekly_reflections').select('*').order('week_start',{ascending:false}).limit(12);
   const el=document.getElementById('past-refs');
-  if(!data||data.length===0){el.innerHTML='';return;}
-  el.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;">Past Reflections</div>`+data.map(r=>`<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;font-weight:600;">Week of ${r.week_start}</span><span style="font-size:13px;color:var(--gold);font-weight:600;">Score: ${r.score}/10</span></div>${r.wins?`<div style="font-size:12px;margin-bottom:4px;"><strong>Wins:</strong> ${r.wins}</div>`:''}${r.challenges?`<div style="font-size:12px;margin-bottom:4px;"><strong>Challenges:</strong> ${r.challenges}</div>`:''}${r.adjustments?`<div style="font-size:12px;"><strong>Adjustments:</strong> ${r.adjustments}</div>`:''}</div>`).join('');
+  if(!data||data.length===0){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;">No reflections yet — save your first one above.</div>';
+    return;
+  }
+  const scoreColor = s => s>=8?'var(--green)':s>=5?'var(--amber)':'var(--red)';
+  el.innerHTML=data.map(r=>`
+    <div style="background:var(--bg);border-radius:10px;padding:1rem;margin-bottom:12px;border-left:4px solid ${scoreColor(r.score)};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:14px;font-weight:600;">Week of ${r.week_start}</span>
+        <span style="font-size:18px;font-weight:700;color:${scoreColor(r.score)}">${r.score}/10</span>
+      </div>
+      ${r.wins?`<div style="font-size:13px;margin-bottom:6px;"><span style="color:var(--green);font-weight:600;">🏆 Wins</span><br>${r.wins}</div>`:''}
+      ${r.challenges?`<div style="font-size:13px;margin-bottom:6px;"><span style="color:var(--amber);font-weight:600;">💪 Challenges</span><br>${r.challenges}</div>`:''}
+      ${r.adjustments?`<div style="font-size:13px;"><span style="color:var(--blue);font-weight:600;">🔄 Adjustments</span><br>${r.adjustments}</div>`:''}
+    </div>`).join('');
+}
+
+// KNOWLEDGE TAB
+function renderKnowledge() {
+  const catFilter = document.getElementById('k-category-filter')?.value || '';
+
+  // KPIs
+  const total = D.training.length;
+  const completed = D.training.filter(t=>t.status==='Completed').length;
+  const certsTotal = D.certs.length;
+  const certsActive = D.certs.filter(c=>c.status==='Active').length;
+  if(document.getElementById('k-total')) document.getElementById('k-total').textContent = total;
+  if(document.getElementById('k-completed')) document.getElementById('k-completed').textContent = completed;
+  if(document.getElementById('k-certs')) document.getElementById('k-certs').textContent = certsTotal;
+  if(document.getElementById('k-certs-active')) document.getElementById('k-certs-active').textContent = certsActive;
+
+  // Training grid
+  const catColors = {
+    'Amazon Strategy':'#DBEAFE:#1D4ED8',
+    'Advertising & PPC':'#FEE2E2:#991B1B',
+    'AU Retail Ecosystem':'#D1FAE5:#065F46',
+    'Traffic & Conversion':'#EDE9FE:#6D28D9',
+    'Channel Economics':'#FEF3C7:#92400E',
+    'Business Development':'#CCFBF1:#134E4A',
+    'Other':'#F1F5F9:#64748B'
+  };
+  const statusStyle = {'Not started':'#F1F5F9:#64748B','In progress':'#FEF3C7:#92400E','Completed':'#D1FAE5:#065F46'};
+  const typeIcon = {'Course':'📚','Book':'📖','Podcast':'🎧','Article / Report':'📄','Video':'🎥','Workshop':'🎓','Other':'📌'};
+
+  let training = catFilter ? D.training.filter(t=>t.category===catFilter) : D.training;
+  const grid = document.getElementById('training-grid');
+  grid.innerHTML = training.length===0
+    ? '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:1rem 0;">No training resources yet — add your first!</div>'
+    : training.map(t=>{
+        const [cbg,ccol]=(catColors[t.category]||'#F1F5F9:#64748B').split(':');
+        const [sbg,scol]=(statusStyle[t.status]||'#F1F5F9:#64748B').split(':');
+        const icon = typeIcon[t.type]||'📌';
+        return `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <span style="font-size:18px;">${icon}</span>
+            <span class="badge" style="background:${sbg};color:${scol}">${t.status}</span>
+          </div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${t.title}</div>
+          <div style="margin-bottom:8px;"><span class="badge" style="background:${cbg};color:${ccol};font-size:10px;">${t.category}</span></div>
+          ${t.notes?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5;">${t.notes}</div>`:''}
+          <div style="display:flex;gap:6px;margin-top:auto;">
+            ${t.url?`<a href="${t.url}" target="_blank" class="btn-sm" style="text-decoration:none;color:var(--blue);">Open ↗</a>`:''}
+            <button class="btn-sm" onclick="editTraining('${t.id}')">Edit</button>
+            <button class="btn-sm" style="color:var(--red);" onclick="delTraining('${t.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Certifications table
+  const tbody = document.getElementById('certs-tbody');
+  tbody.innerHTML = D.certs.length===0
+    ? '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">No certifications yet</td></tr>'
+    : D.certs.map(c=>{
+        const statusColors={'Planned':'#F1F5F9:#64748B','In Progress':'#FEF3C7:#92400E','Active':'#D1FAE5:#065F46','Expired':'#FEE2E2:#991B1B'};
+        const [sbg,scol]=(statusColors[c.status]||'#F1F5F9:#64748B').split(':');
+        const isExpiring = c.expiry_date && new Date(c.expiry_date) < new Date(Date.now()+30*86400000);
+        return `<tr>
+          <td><strong>${c.name}</strong>${c.cert_url?` <a href="${c.cert_url}" target="_blank" style="color:var(--blue);font-size:11px;">View ↗</a>`:''}</td>
+          <td>${c.issuer||'—'}</td>
+          <td>${c.category||'—'}</td>
+          <td>${c.date_earned||'—'}</td>
+          <td style="color:${isExpiring?'var(--red)':'inherit'}">${c.expiry_date||'—'}${isExpiring?' ⚠️':''}</td>
+          <td><span class="badge" style="background:${sbg};color:${scol}">${c.status}</span></td>
+          <td style="display:flex;gap:4px;">
+            <button class="btn-sm" onclick="editCert('${c.id}')">Edit</button>
+            <button class="btn-sm" style="color:var(--red);" onclick="delCert('${c.id}')">✕</button>
+          </td>
+        </tr>`;
+      }).join('');
+}
+
+function editTraining(id) {
+  const t = D.training.find(t=>t.id===id);
+  if(!t) return;
+  editingTrainingId = id;
+  document.getElementById('training-modal-title').textContent = 'Edit Resource';
+  document.getElementById('training-save-btn').textContent = 'Update';
+  document.getElementById('tr-title').value = t.title||'';
+  document.getElementById('tr-category').value = t.category||'Amazon Strategy';
+  document.getElementById('tr-type').value = t.type||'Course';
+  document.getElementById('tr-url').value = t.url||'';
+  document.getElementById('tr-status').value = t.status||'Not started';
+  document.getElementById('tr-notes').value = t.notes||'';
+  openModal('m-training');
+}
+
+async function saveTraining() {
+  const title = document.getElementById('tr-title').value;
+  if(!title) return alert('Title required');
+  const payload = {
+    title,
+    category: document.getElementById('tr-category').value,
+    type: document.getElementById('tr-type').value,
+    url: document.getElementById('tr-url').value||null,
+    status: document.getElementById('tr-status').value,
+    notes: document.getElementById('tr-notes').value
+  };
+  if(editingTrainingId) {
+    await sb.from('training_resources').update(payload).eq('id',editingTrainingId);
+    editingTrainingId = null;
+  } else {
+    await sb.from('training_resources').insert(payload);
+  }
+  document.getElementById('training-modal-title').textContent='Add Training Resource';
+  document.getElementById('training-save-btn').textContent='Save';
+  closeModal('m-training');
+  await loadAll(); renderKnowledge();
+}
+
+async function delTraining(id) {
+  if(!confirm('Delete?')) return;
+  await sb.from('training_resources').delete().eq('id',id);
+  await loadAll(); renderKnowledge();
+}
+
+function editCert(id) {
+  const c = D.certs.find(c=>c.id===id);
+  if(!c) return;
+  editingCertId = id;
+  document.getElementById('cert-modal-title').textContent = 'Edit Certification';
+  document.getElementById('cert-save-btn').textContent = 'Update';
+  document.getElementById('ce-name').value = c.name||'';
+  document.getElementById('ce-issuer').value = c.issuer||'';
+  document.getElementById('ce-category').value = c.category||'Amazon Strategy';
+  document.getElementById('ce-date').value = c.date_earned||'';
+  document.getElementById('ce-expiry').value = c.expiry_date||'';
+  document.getElementById('ce-status').value = c.status||'Planned';
+  document.getElementById('ce-url').value = c.cert_url||'';
+  openModal('m-cert');
+}
+
+async function saveCert() {
+  const name = document.getElementById('ce-name').value;
+  if(!name) return alert('Certification name required');
+  const payload = {
+    name,
+    issuer: document.getElementById('ce-issuer').value,
+    category: document.getElementById('ce-category').value,
+    date_earned: document.getElementById('ce-date').value||null,
+    expiry_date: document.getElementById('ce-expiry').value||null,
+    status: document.getElementById('ce-status').value,
+    cert_url: document.getElementById('ce-url').value||null
+  };
+  if(editingCertId) {
+    await sb.from('certifications').update(payload).eq('id',editingCertId);
+    editingCertId = null;
+  } else {
+    await sb.from('certifications').insert(payload);
+  }
+  document.getElementById('cert-modal-title').textContent='Add Certification';
+  document.getElementById('cert-save-btn').textContent='Save';
+  closeModal('m-cert');
+  await loadAll(); renderKnowledge();
+}
+
+async function delCert(id) {
+  if(!confirm('Delete?')) return;
+  await sb.from('certifications').delete().eq('id',id);
+  await loadAll(); renderKnowledge();
 }
 
 loadAll();
