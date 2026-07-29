@@ -130,6 +130,7 @@
     <button class="nav-tab" onclick="showTab('signals',this)">Warm Signals</button>
     <button class="nav-tab" onclick="showTab('revenue',this)">Revenue</button>
     <button class="nav-tab" onclick="showTab('goals',this)">Goals</button>
+    <button class="nav-tab" onclick="showTab('wbr',this)">Weekly Bridge</button>
     <button class="nav-tab" onclick="showTab('knowledge',this)">Knowledge</button>
   </div>
   <div class="nav-time" id="nav-time"></div>
@@ -447,6 +448,100 @@
   </div>
 </div>
 
+<!-- WEEKLY BRIDGE -->
+<div id="tab-wbr" class="page">
+
+  <!-- WBR Header -->
+  <div style="background:linear-gradient(135deg,#0D1B2A 0%,#1a2f45 100%);border-radius:16px;padding:1.75rem 2rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:11px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Weekly Business Review</div>
+      <div style="font-size:22px;font-weight:700;color:white;" id="wbr-title">W31 — Week of July 28, 2026</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;">Bridge the gap. Own the narrative. Define the next step.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <select id="wbr-week-filter" onchange="loadWBR()" style="padding:8px 12px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.1);color:white;font-size:13px;cursor:pointer;">
+        <option value="">Current week</option>
+      </select>
+      <button class="btn btn-gold" onclick="saveWBR()">Save WBR</button>
+    </div>
+  </div>
+
+  <!-- Score banner -->
+  <div class="grid-3" style="margin-bottom:1.5rem;">
+    <div class="kpi-card" style="border-left:4px solid var(--green);">
+      <div class="kpi-label">Metrics On Track</div>
+      <div class="kpi-value" id="wbr-on-track">—</div>
+      <div class="kpi-sub">of 6 this week</div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--amber);">
+      <div class="kpi-label">Gaps Identified</div>
+      <div class="kpi-value" id="wbr-gaps">—</div>
+      <div class="kpi-sub">need bridging</div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--gold);">
+      <div class="kpi-label">WBR Completion</div>
+      <div class="kpi-value" id="wbr-completion">—</div>
+      <div class="kpi-sub">fields filled in</div>
+    </div>
+  </div>
+
+  <!-- Metric Bridges -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-header">
+      <div class="section-title">📊 Metric Bridges</div>
+      <div style="font-size:12px;color:var(--muted);">For each metric: set your weekly target, record actual, explain the gap, define next step.</div>
+    </div>
+    <div id="wbr-metrics-container"></div>
+  </div>
+
+  <!-- Wins & Misses -->
+  <div class="grid-2" style="margin-bottom:1.5rem;">
+    <div class="card" style="border-top:3px solid var(--green);">
+      <div class="section-header">
+        <div class="section-title">🏆 Wins this week</div>
+        <div style="font-size:11px;color:var(--muted);">What worked? What are you proud of?</div>
+      </div>
+      <textarea id="wbr-wins" placeholder="— Sent proposal to Avène&#10;— Published 2 LinkedIn posts&#10;— Reached 260 newsletter subscribers" style="min-height:120px;border:none;background:var(--bg);border-radius:8px;padding:12px;width:100%;font-size:13px;resize:vertical;font-family:inherit;line-height:1.6;"></textarea>
+    </div>
+    <div class="card" style="border-top:3px solid var(--red);">
+      <div class="section-header">
+        <div class="section-title">⚠️ Misses this week</div>
+        <div style="font-size:11px;color:var(--muted);">What didn't happen? Be honest.</div>
+      </div>
+      <textarea id="wbr-misses" placeholder="— Didn't send 5 outreach messages&#10;— Go-To still no response&#10;— Thursday post missed" style="min-height:120px;border:none;background:var(--bg);border-radius:8px;padding:12px;width:100%;font-size:13px;resize:vertical;font-family:inherit;line-height:1.6;"></textarea>
+    </div>
+  </div>
+
+  <!-- Commitments for next week -->
+  <div class="card" style="margin-bottom:1.5rem;border-top:3px solid var(--gold);">
+    <div class="section-header">
+      <div class="section-title">🎯 Commitments for next week</div>
+      <div style="font-size:11px;color:var(--muted);">The 3 things you WILL do — no excuses.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;" id="wbr-commitments-container">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;font-weight:700;color:var(--gold);">1</span>
+        <input type="text" class="form-input" id="wbr-c1" placeholder="e.g. Book call with Avène by Wednesday">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;font-weight:700;color:var(--gold);">2</span>
+        <input type="text" class="form-input" id="wbr-c2" placeholder="e.g. Publish digital shelf vs physical shelf post">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;font-weight:700;color:var(--gold);">3</span>
+        <input type="text" class="form-input" id="wbr-c3" placeholder="e.g. Send research to Accord Australasia VP">
+      </div>
+    </div>
+  </div>
+
+  <!-- Historical WBRs -->
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1.25rem;">📚 WBR History</div>
+    <div id="wbr-history"><div class="loading">Loading history...</div></div>
+  </div>
+
+</div>
+
 <!-- KNOWLEDGE -->
 <div id="tab-knowledge" class="page">
   <div class="kpi-grid" style="margin-bottom:1.5rem;">
@@ -760,6 +855,7 @@ function showTab(name, btn) {
   if(name==='signals') renderSigTable();
   if(name==='goals') { renderGoals(); loadPastRefs(); document.getElementById('current-week-label').textContent = weekStart(); }
   if(name==='knowledge') renderKnowledge();
+  if(name==='wbr') initWBR();
 }
 
 function openModal(id){ document.getElementById(id).classList.add('open'); }
@@ -1449,6 +1545,216 @@ async function loadPastRefs() {
       ${r.challenges?`<div style="font-size:13px;margin-bottom:6px;"><span style="color:var(--amber);font-weight:600;">💪 Challenges</span><br>${r.challenges}</div>`:''}
       ${r.adjustments?`<div style="font-size:13px;"><span style="color:var(--blue);font-weight:600;">🔄 Adjustments</span><br>${r.adjustments}</div>`:''}
     </div>`).join('');
+}
+
+}
+
+// ─── WEEKLY BRIDGE (WBR) ───────────────────────────────────────────
+const WBR_METRICS = [
+  { key:'revenue',     label:'Monthly Revenue',         target_default:0,  hint:'MRR added or confirmed this week?' },
+  { key:'clients',     label:'Pipeline Conversations',  target_default:1,  hint:'Warm conversations that moved forward?' },
+  { key:'posts',       label:'LinkedIn Posts Published', target_default:2,  hint:'Did you hit your 2 posts this week?' },
+  { key:'outreach',    label:'Outreach Messages Sent',  target_default:5,  hint:'5 warm signal messages sent?' },
+  { key:'subscribers', label:'New Subscribers',         target_default:10, hint:'New newsletter subscribers this week?' },
+  { key:'newsletter',  label:'Newsletter Published',    target_default:1,  hint:'Edition sent this week? (0 or 1)' },
+];
+
+const STATUS_COLORS = {
+  'on-track': { bg:'#D1FAE5', text:'#065F46', label:'On Track ✓' },
+  'at-risk':  { bg:'#FEF3C7', text:'#92400E', label:'At Risk ⚡' },
+  'miss':     { bg:'#FEE2E2', text:'#991B1B', label:'Miss ✗' },
+  'n/a':      { bg:'#F1F5F9', text:'#64748B', label:'N/A' },
+};
+
+let wbrCurrentWeek = weekStart();
+let wbrData = {};
+
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+
+function getWeekLabel(ws) {
+  const d = new Date(ws);
+  return `W${getISOWeek(d)} — Week of ${d.toLocaleDateString('en-AU',{month:'long',day:'numeric',year:'numeric'})}`;
+}
+
+async function initWBR() {
+  wbrCurrentWeek = weekStart();
+  const filter = document.getElementById('wbr-week-filter');
+  if(filter) {
+    filter.innerHTML = '<option value="">Current week</option>';
+    for(let i=1; i<=12; i++) {
+      const d = new Date(wbrCurrentWeek);
+      d.setDate(d.getDate() - (i*7));
+      const ws = d.toISOString().split('T')[0];
+      const opt = document.createElement('option');
+      opt.value = ws;
+      opt.textContent = `W${getISOWeek(d)} — ${d.toLocaleDateString('en-AU',{month:'short',day:'numeric'})}`;
+      filter.appendChild(opt);
+    }
+  }
+  document.getElementById('wbr-title').textContent = getWeekLabel(wbrCurrentWeek);
+  await loadWBR();
+  await loadWBRHistory();
+}
+
+async function loadWBR() {
+  const filterVal = document.getElementById('wbr-week-filter')?.value;
+  const week = filterVal || wbrCurrentWeek;
+  const isCurrentWeek = !filterVal;
+  document.getElementById('wbr-title').textContent = getWeekLabel(week);
+  const { data } = await sb.from('weekly_bridge').select('*').eq('week_start', week).maybeSingle();
+  wbrData = data || {};
+  renderWBRMetrics(week, isCurrentWeek);
+  if(document.getElementById('wbr-wins')) document.getElementById('wbr-wins').value = wbrData.wins || '';
+  if(document.getElementById('wbr-misses')) document.getElementById('wbr-misses').value = wbrData.misses || '';
+  if(document.getElementById('wbr-c1')) document.getElementById('wbr-c1').value = wbrData.commitment_1 || '';
+  if(document.getElementById('wbr-c2')) document.getElementById('wbr-c2').value = wbrData.commitment_2 || '';
+  if(document.getElementById('wbr-c3')) document.getElementById('wbr-c3').value = wbrData.commitment_3 || '';
+  ['wbr-wins','wbr-misses','wbr-c1','wbr-c2','wbr-c3'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.readOnly = !isCurrentWeek;
+  });
+  updateWBRScoreBanner();
+}
+
+function renderWBRMetrics(week, isEditable) {
+  const container = document.getElementById('wbr-metrics-container');
+  if(!container) return;
+  const metrics = wbrData.metrics ? JSON.parse(wbrData.metrics) : {};
+  container.innerHTML = WBR_METRICS.map(m => {
+    const saved = metrics[m.key] || {};
+    const target = saved.target ?? m.target_default;
+    const actual = saved.actual ?? '';
+    const status = saved.status || 'n/a';
+    const why = saved.why || '';
+    const next = saved.next || '';
+    const eta = saved.eta || '';
+    const sc = STATUS_COLORS[status];
+    const ro = !isEditable ? 'readonly' : '';
+    const dis = !isEditable ? 'disabled' : '';
+    const robg = !isEditable ? 'background:var(--bg);' : '';
+    return `<div style="border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;background:white;border-left:4px solid ${sc.bg==='#D1FAE5'?'#2A9D8F':sc.bg==='#FEE2E2'?'#E63946':sc.bg==='#FEF3C7'?'#E9C46A':'#E2E8F0'};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">${m.label}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${m.hint}</div>
+        </div>
+        <select id="wbr-status-${m.key}" ${dis} onchange="updateWBRCard('${m.key}')"
+          style="padding:5px 10px;border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;background:${sc.bg};color:${sc.text};cursor:pointer;">
+          ${Object.entries(STATUS_COLORS).map(([k,v])=>`<option value="${k}" ${status===k?'selected':''}>${v.label}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;">Weekly Target</div>
+          <input type="number" value="${target}" id="wbr-target-${m.key}" ${ro} onchange="updateWBRCard('${m.key}')"
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:15px;font-weight:700;color:var(--navy);${robg}">
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;">Actual</div>
+          <input type="number" value="${actual}" id="wbr-actual-${m.key}" ${ro} placeholder="0" onchange="updateWBRCard('${m.key}')"
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:15px;font-weight:700;${robg}">
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;">Why (root cause)</div>
+          <input type="text" value="${why}" id="wbr-why-${m.key}" ${ro} placeholder="What caused the gap?"
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;${robg}">
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;">Next Step</div>
+          <input type="text" value="${next}" id="wbr-next-${m.key}" ${ro} placeholder="Corrective action"
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;${robg}">
+        </div>
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:4px;">ETA</div>
+          <input type="date" value="${eta}" id="wbr-eta-${m.key}" ${ro}
+            style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;${robg}">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateWBRCard(key) {
+  const statusEl = document.getElementById(`wbr-status-${key}`);
+  const sc = STATUS_COLORS[statusEl?.value] || STATUS_COLORS['n/a'];
+  if(statusEl) { statusEl.style.background = sc.bg; statusEl.style.color = sc.text; }
+  updateWBRScoreBanner();
+}
+
+function updateWBRScoreBanner() {
+  let onTrack=0, gaps=0, filled=0;
+  WBR_METRICS.forEach(m => {
+    const status = document.getElementById(`wbr-status-${m.key}`)?.value;
+    const why = document.getElementById(`wbr-why-${m.key}`)?.value;
+    if(status==='on-track') onTrack++;
+    if(status==='miss'||status==='at-risk') gaps++;
+    if(why) filled++;
+  });
+  const total = WBR_METRICS.length;
+  if(document.getElementById('wbr-on-track')) document.getElementById('wbr-on-track').textContent = `${onTrack}/${total}`;
+  if(document.getElementById('wbr-gaps')) document.getElementById('wbr-gaps').textContent = gaps;
+  if(document.getElementById('wbr-completion')) document.getElementById('wbr-completion').textContent = `${Math.round(filled/total*100)}%`;
+}
+
+async function saveWBR() {
+  const metrics = {};
+  WBR_METRICS.forEach(m => {
+    metrics[m.key] = {
+      target: document.getElementById(`wbr-target-${m.key}`)?.value||0,
+      actual: document.getElementById(`wbr-actual-${m.key}`)?.value||0,
+      status: document.getElementById(`wbr-status-${m.key}`)?.value||'n/a',
+      why:    document.getElementById(`wbr-why-${m.key}`)?.value||'',
+      next:   document.getElementById(`wbr-next-${m.key}`)?.value||'',
+      eta:    document.getElementById(`wbr-eta-${m.key}`)?.value||'',
+    };
+  });
+  await sb.from('weekly_bridge').upsert({
+    week_start:   wbrCurrentWeek,
+    metrics:      JSON.stringify(metrics),
+    wins:         document.getElementById('wbr-wins')?.value||'',
+    misses:       document.getElementById('wbr-misses')?.value||'',
+    commitment_1: document.getElementById('wbr-c1')?.value||'',
+    commitment_2: document.getElementById('wbr-c2')?.value||'',
+    commitment_3: document.getElementById('wbr-c3')?.value||'',
+  },{onConflict:'week_start'});
+  await loadWBRHistory();
+  alert('WBR saved! 🎯');
+}
+
+async function loadWBRHistory() {
+  const { data } = await sb.from('weekly_bridge').select('*').order('week_start',{ascending:false}).limit(12);
+  const el = document.getElementById('wbr-history');
+  if(!el) return;
+  if(!data||data.length===0){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:1rem 0;">No WBR history yet — complete your first one above.</div>';return;}
+  el.innerHTML = data.map(r => {
+    const metrics = r.metrics ? JSON.parse(r.metrics) : {};
+    const onTrack = Object.values(metrics).filter(m=>m.status==='on-track').length;
+    const misses = Object.values(metrics).filter(m=>m.status==='miss').length;
+    const total = WBR_METRICS.length;
+    const d = new Date(r.week_start);
+    const scoreColor = onTrack>=4?'var(--green)':onTrack>=2?'var(--amber)':'var(--red)';
+    return `<div style="background:var(--bg);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;border-left:4px solid ${scoreColor};">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:14px;font-weight:600;">W${getISOWeek(d)} — ${d.toLocaleDateString('en-AU',{month:'long',day:'numeric',year:'numeric'})}</span>
+        <div style="display:flex;gap:8px;">
+          <span style="font-size:12px;background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:20px;font-weight:600;">${onTrack}/${total} on track</span>
+          ${misses>0?`<span style="font-size:12px;background:#FEE2E2;color:#991B1B;padding:3px 10px;border-radius:20px;font-weight:600;">${misses} miss${misses>1?'es':''}</span>`:''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px;">
+        ${WBR_METRICS.map(m=>{const md=metrics[m.key]||{};const sc=STATUS_COLORS[md.status||'n/a'];return`<div style="background:${sc.bg};border-radius:6px;padding:5px 8px;"><div style="font-size:10px;color:${sc.text};font-weight:600;">${m.label}</div><div style="font-size:11px;color:${sc.text};">${md.actual??'—'} / ${md.target??'—'}</div></div>`;}).join('')}
+      </div>
+      ${r.wins?`<div style="font-size:12px;margin-bottom:4px;"><strong style="color:var(--green);">🏆</strong> ${r.wins.substring(0,150)}${r.wins.length>150?'...':''}</div>`:''}
+      ${r.misses?`<div style="font-size:12px;margin-bottom:4px;"><strong style="color:var(--red);">⚠️</strong> ${r.misses.substring(0,150)}${r.misses.length>150?'...':''}</div>`:''}
+      ${r.commitment_1?`<div style="font-size:12px;color:var(--muted);"><strong style="color:var(--gold);">🎯</strong> ${[r.commitment_1,r.commitment_2,r.commitment_3].filter(Boolean).join(' · ')}</div>`:''}
+    </div>`;
+  }).join('');
 }
 
 // KNOWLEDGE TAB
