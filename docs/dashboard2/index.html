@@ -8,15 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
-  /* PIN LOCK */
-  #pin-screen { position:fixed; inset:0; background:#0D1B2A; display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction:column; gap:1.5rem; }
-  #pin-screen.hidden { display:none; }
-  .pin-logo { width:64px; height:64px; background:#C8A97A; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#0D1B2A; letter-spacing:-1px; }
-  .pin-title { color:white; font-size:22px; font-weight:600; font-family:system-ui,sans-serif; }
-  .pin-sub { color:rgba(255,255,255,0.4); font-size:13px; font-family:system-ui,sans-serif; }
-  .pin-input { font-size:28px; letter-spacing:12px; text-align:center; width:180px; padding:12px; border:2px solid rgba(200,169,122,0.3); border-radius:12px; background:rgba(255,255,255,0.05); color:white; outline:none; font-family:monospace; }
-  .pin-input:focus { border-color:#C8A97A; }
-  .pin-error { color:#E63946; font-size:13px; font-family:system-ui,sans-serif; min-height:20px; }
 
   /* MAIN STYLES */
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -108,16 +99,6 @@
 </style>
 </head>
 <body>
-
-<!-- PIN LOCK SCREEN -->
-<div id="pin-screen">
-  <div class="pin-logo">VS</div>
-  <div class="pin-title">VendorScout</div>
-  <div class="pin-sub">Enter your PIN to continue</div>
-  <input type="password" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" autocomplete="new-password">
-  <button onclick="checkPin(document.getElementById('pin-input').value)" style="background:#C8A97A;color:#0D1B2A;border:none;border-radius:10px;padding:12px 40px;font-size:16px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;">Unlock →</button>
-  <div class="pin-error" id="pin-error"></div>
-</div>
 
 <nav>
   <div class="nav-brand" style="display:flex;align-items:center;gap:10px;">
@@ -2074,28 +2055,8 @@ greetingStyle.textContent = `
 `;
 document.head.appendChild(greetingStyle);
 
-const DASHBOARD_PIN = '2015';
-
-function checkPin(val) {
-  if(val.length < 4) return;
-  if(val === DASHBOARD_PIN) {
-    sessionStorage.setItem('vs-unlocked','true');
-    document.getElementById('pin-screen').classList.add('hidden');
-    loadAll();
-    setInterval(loadAll, 60000);
-  } else {
-    document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
-    document.getElementById('pin-input').value = '';
-    setTimeout(()=>{ const e=document.getElementById('pin-error'); if(e) e.textContent=''; }, 2000);
-  }
-}
-
-// Already unlocked this session — skip PIN
-if(sessionStorage.getItem('vs-unlocked')==='true') {
-  document.getElementById('pin-screen').classList.add('hidden');
-  loadAll();
-  setInterval(loadAll, 60000);
-}
+loadAll();
+setInterval(loadAll, 60000);
 </script>
 </body>
 </html>
