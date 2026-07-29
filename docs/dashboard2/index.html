@@ -149,9 +149,22 @@
     <div class="card">
       <div class="section-header">
         <div class="section-title">Weekly Non-Negotiables</div>
-        <button class="btn-sm" onclick="resetWeek()">Reset Week</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-sm" onclick="showAddTask()">+ Add Task</button>
+          <button class="btn-sm" onclick="resetWeek()">Reset Week</button>
+        </div>
       </div>
       <div id="tasks-list"><div class="loading">Loading...</div></div>
+      <div id="add-task-form" style="display:none;margin-top:12px;display:none;">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input type="text" id="new-task-input" class="form-input" placeholder="Add a task..." style="flex:1;padding:6px 10px;font-size:13px;">
+          <select id="new-task-day" class="form-input" style="width:80px;padding:6px;font-size:13px;">
+            <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option><option>Bi-wk</option><option>Daily</option>
+          </select>
+          <button class="btn btn-primary" style="padding:6px 12px;font-size:13px;" onclick="addCustomTask()">Add</button>
+          <button class="btn-sm" onclick="hideAddTask()">✕</button>
+        </div>
+      </div>
       <div style="margin-top:12px;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px;" id="tasks-label">0 of 7 completed</div>
         <div class="progress-bar"><div class="progress-fill" id="tasks-bar" style="background:var(--green);width:0%"></div></div>
@@ -498,15 +511,16 @@ function setPeriod(period, btn) {
 }
 
 function filterByPeriod(data) {
+  if(!data || data.length === 0) return data;
   const now = new Date();
   if(currentPeriod === 'month') {
     const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    return data.filter(c=>c.post_date >= start);
+    return data.filter(c => c.post_date && c.post_date >= start);
   }
   if(currentPeriod === 'quarter') {
     const q = Math.floor(now.getMonth()/3);
     const start = new Date(now.getFullYear(), q*3, 1).toISOString().split('T')[0];
-    return data.filter(c=>c.post_date >= start);
+    return data.filter(c => c.post_date && c.post_date >= start);
   }
   return data;
 }
@@ -649,30 +663,111 @@ function renderKPIs() {
   document.getElementById('rev-bar').style.cssText = `background:${color(revPct)};width:${revPct}%`;
 }
 
-function renderTasks() {
-  const el = document.getElementById('tasks-list');
-  el.innerHTML = TASKS.map(t=>{
-    const rec = D.tasks.find(r=>r.task_id===t.id);
-    const done = rec?.completed||false;
-    return `<div class="task-item"><input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.id}',this.checked)"><span class="task-label ${done?'done':''}">${t.name}</span><span class="task-day">${t.day}</span></div>`;
-  }).join('');
-  const done = D.tasks.filter(t=>t.completed).length;
-  document.getElementById('tasks-label').textContent = `${done} of ${TASKS.length} completed`;
-  document.getElementById('tasks-bar').style.width = pct(done,TASKS.length)+'%';
+function showAddTask() {
+  const f = document.getElementById('add-task-form');
+  f.style.display = f.style.display === 'none' ? 'flex' : 'none';
+  f.style.flexDirection = 'column';
+  if(f.style.display !== 'none') document.getElementById('new-task-input').focus();
 }
 
-async function toggleTask(taskId, checked) {
+function hideAddTask() {
+  document.getElementById('add-task-form').style.display = 'none';
+}
+
+async function addCustomTask() {
+  const name = document.getElementById('new-task-input').value.trim();
+  const day = document.getElementById('new-task-day').value;
+  if(!name) return alert('Please enter a task name');
+  const taskId = 'custom-' + Date.now();
+  const week = weekStart();
+  const {data} = await sb.from('weekly_tasks').insert({
+    task_id: taskId,
+    task_name: name,
+    task_day: day,
+    completed: false,
+    week_start: week
+  }).select();
+  if(data) D.tasks.push(data[0]);
+  document.getElementById('new-task-input').value = '';
+  hideAddTask();
+  renderTasks();
+  renderKPIs();
+}
+
+function renderTasks() {
+  const week = weekStart();
+  // Combine default tasks with custom tasks from DB
+  const customTasks = D.tasks.filter(t => t.task_id && t.task_id.startsWith('custom-'));
+
+  const defaultItems = TASKS.map(t => {
+    const rec = D.tasks.find(r => r.task_id === t.id);
+    const done = rec?.completed || false;
+    return `<div class="task-item">
+      <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
+      <span class="task-label ${done?'done':''}">${t.name}</span>
+      <span class="task-day">${t.day}</span>
+    </div>`;
+  }).join('');
+
+  const customItems = customTasks.map(t => {
+    const done = t.completed || false;
+    return `<div class="task-item">
+      <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.task_id}',this.checked,'${t.id}')">
+      <span class="task-label ${done?'done':''}">${t.task_name}</span>
+      <span class="task-day">${t.task_day||''}</span>
+      <button onclick="deleteCustomTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:0 4px;" title="Remove task">✕</button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tasks-list').innerHTML = defaultItems + customItems;
+
+  const totalTasks = TASKS.length + customTasks.length;
+  const completedDefault = D.tasks.filter(t => !t.task_id?.startsWith('custom-') && t.completed).length;
+  const completedCustom = customTasks.filter(t => t.completed).length;
+  const done = completedDefault + completedCustom;
+
+  document.getElementById('tasks-label').textContent = `${done} of ${totalTasks} completed`;
+  document.getElementById('tasks-bar').style.width = pct(done, totalTasks) + '%';
+  document.getElementById('kpi-score').textContent = done + '/' + totalTasks;
+  document.getElementById('kpi-score-bar').style.width = pct(done, totalTasks) + '%';
+}
+
+async function toggleTask(taskId, checked, dbId) {
   const week = weekStart();
   const def = TASKS.find(t=>t.id===taskId);
-  const existing = D.tasks.find(t=>t.task_id===taskId);
-  if(existing) {
-    await sb.from('weekly_tasks').update({completed:checked}).eq('id',existing.id);
-    existing.completed = checked;
+
+  if(dbId) {
+    // Custom task — has direct DB id
+    await sb.from('weekly_tasks').update({completed:checked}).eq('id',dbId);
+    const t = D.tasks.find(t=>t.id===dbId);
+    if(t) t.completed = checked;
   } else {
-    const {data} = await sb.from('weekly_tasks').insert({task_id:taskId,task_name:def.name,task_day:def.day,completed:checked,week_start:week}).select();
-    if(data) D.tasks.push(data[0]);
+    // Default task
+    const existing = D.tasks.find(t=>t.task_id===taskId);
+    if(existing) {
+      await sb.from('weekly_tasks').update({completed:checked}).eq('id',existing.id);
+      existing.completed = checked;
+    } else {
+      const {data} = await sb.from('weekly_tasks').insert({
+        task_id:taskId,
+        task_name:def?.name||taskId,
+        task_day:def?.day||'',
+        completed:checked,
+        week_start:week
+      }).select();
+      if(data) D.tasks.push(data[0]);
+    }
   }
-  renderTasks(); renderKPIs();
+  renderTasks();
+  renderKPIs();
+}
+
+async function deleteCustomTask(dbId) {
+  if(!confirm('Remove this task?')) return;
+  await sb.from('weekly_tasks').delete().eq('id',dbId);
+  D.tasks = D.tasks.filter(t=>t.id!==dbId);
+  renderTasks();
+  renderKPIs();
 }
 
 async function resetWeek() {
@@ -896,7 +991,12 @@ async function saveContent() {
 
 async function markPub(id) {
   await sb.from('content_calendar').update({status:'published'}).eq('id',id);
-  await loadAll(); renderContentTab();
+  // Update locally to avoid full reload flicker
+  const item = D.content.find(c=>c.id===id);
+  if(item) item.status = 'published';
+  renderKPIs();
+  renderContentTab();
+  renderHomeContent();
 }
 
 async function delContent(id) {
