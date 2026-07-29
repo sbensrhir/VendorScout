@@ -2072,6 +2072,8 @@ greetingStyle.textContent = `
 `;
 document.head.appendChild(greetingStyle);
 
+const DASHBOARD_PIN = '2015';
+
 function checkPin(val) {
   if(val.length < 4) { document.getElementById('pin-error').textContent = ''; return; }
   if(val === DASHBOARD_PIN) {
