@@ -346,9 +346,14 @@
       <div id="goals-list"><div class="loading">Loading...</div></div>
     </div>
     <div class="card">
-      <div class="section-title" style="margin-bottom:1rem;">Update Goals Manually</div>
+      <div class="section-header">
+        <div class="section-title">Update Current Values</div>
+        <button class="btn btn-gold" onclick="saveSettings()">Save All</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:1rem;">Update your current progress — targets and ETAs are editable in Goal Settings below.</div>
+
       <div class="form-group">
-        <label class="form-label">Newsletter Subscribers</label>
+        <label class="form-label">Newsletter Subscribers (current)</label>
         <input type="number" class="form-input" id="inp-subs" placeholder="250">
       </div>
       <div class="form-group">
@@ -357,13 +362,31 @@
       </div>
       <div class="form-group">
         <label class="form-label">Client Workshops Delivered: <span id="workshop-lbl">0</span></label>
-        <input type="range" min="0" max="10" value="0" id="inp-workshops" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('workshop-lbl').textContent=this.value">
+        <input type="range" min="0" max="20" value="0" id="inp-workshops" style="width:100%;accent-color:var(--gold);margin-top:6px;" oninput="document.getElementById('workshop-lbl').textContent=this.value">
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:12px;">
         <label class="form-label" style="margin:0;">Speaking Invitation Secured</label>
         <label class="toggle"><input type="checkbox" id="inp-speaking"><span class="toggle-slider"></span></label>
       </div>
-      <button class="btn btn-gold" style="margin-top:1rem;" onclick="saveSettings()">Save Goals</button>
+      <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+        <label class="form-label" style="margin:0;">Inbound-Only Pipeline Achieved</label>
+        <label class="toggle"><input type="checkbox" id="inp-inbound"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goal Settings — editable targets and ETAs -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="section-header">
+      <div class="section-title">⚙️ Goal Settings — Targets & ETAs</div>
+      <button class="btn btn-primary" onclick="saveGoalTargets()">Save Targets</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:1rem;">Change your targets and ETAs here — all progress bars update automatically.</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Goal</th><th>Current</th><th>Target</th><th>ETA</th><th>Notes</th></tr></thead>
+        <tbody id="goal-settings-tbody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1210,66 +1233,155 @@ async function delRev(id) {
   await loadAll(); renderRevenueTab();
 }
 
+// Default goal definitions — overridable via settings
+const DEFAULT_GOALS = [
+  { key:'revenue',       label:'Monthly Revenue (AUD)',      target:15000, eta:'2027-01-31', fmt:'currency', auto:true,  note:'Auto-calculated from Revenue tab' },
+  { key:'clients',       label:'Active Clients',             target:4,     eta:'2026-10-31', fmt:'number',   auto:true,  note:'Auto-calculated from Revenue tab' },
+  { key:'subscribers',   label:'Newsletter Subscribers',     target:1000,  eta:'2026-12-31', fmt:'number',   auto:false, note:'Update manually in current values' },
+  { key:'saas',          label:'SaaS MVP Progress',          target:100,   eta:'2027-01-31', fmt:'percent',  auto:false, note:'Update manually in current values' },
+  { key:'workshops',     label:'Client Workshops Delivered', target:5,     eta:'2027-01-31', fmt:'number',   auto:false, note:'Update manually in current values' },
+  { key:'speaking',      label:'Speaking Invitation',        target:1,     eta:'2027-06-30', fmt:'boolean',  auto:false, note:'Online Retailer 2027 or equivalent' },
+  { key:'inbound',       label:'Inbound-Only Pipeline',      target:100,   eta:'2027-01-31', fmt:'percent',  auto:true,  note:'Auto-calculated from Pipeline tab' },
+];
+
+function getGoalSettings() {
+  const s = D.settings;
+  return DEFAULT_GOALS.map(g => ({
+    ...g,
+    target: Number(s[`goal_target_${g.key}`] || g.target),
+    eta: s[`goal_eta_${g.key}`] || g.eta,
+    note: s[`goal_note_${g.key}`] || g.note,
+  }));
+}
+
+function getGoalCurrentValues() {
+  const mrr = D.revenue.filter(r=>r.status==='active').reduce((s,r)=>s+Number(r.monthly_value),0);
+  const clients = D.revenue.filter(r=>r.status==='active').length;
+  const subs = Number(D.settings.newsletter_subscribers||250);
+  const saas = Number(D.settings.saas_mvp_percent||0);
+  const workshops = Number(D.settings.workshops_delivered||0);
+  const speaking = D.settings.speaking_invitation==='true' ? 1 : 0;
+  const inboundLeads = D.pipeline.filter(p=>['Inbound post','Newsletter','Warm signal'].includes(p.source)).length;
+  const inboundPct = D.pipeline.length>0 ? Math.round(inboundLeads/D.pipeline.length*100) : 0;
+  return { revenue:mrr, clients, subscribers:subs, saas, workshops, speaking, inbound:inboundPct };
+}
+
+function formatGoalValue(val, fmt) {
+  if(fmt==='currency') return '$'+Number(val).toLocaleString('en-AU');
+  if(fmt==='percent') return val+'%';
+  if(fmt==='boolean') return val ? '✓ Secured' : 'Not yet';
+  return String(val);
+}
+
 function renderGoals() {
-  const mrr=D.revenue.filter(r=>r.status==='active').reduce((s,r)=>s+Number(r.monthly_value),0);
-  const clients=D.revenue.filter(r=>r.status==='active').length;
-  const subs=Number(D.settings.newsletter_subscribers||250);
-  const saas=Number(D.settings.saas_mvp_percent||0);
-  const speaking=D.settings.speaking_invitation==='true';
-  const workshops=Number(D.settings.workshops_delivered||0);
-  const inboundLeads=D.pipeline.filter(p=>['Inbound post','Newsletter','Warm signal'].includes(p.source)).length;
-  const inboundPct=D.pipeline.length>0?Math.round(inboundLeads/D.pipeline.length*100):0;
+  const goals = getGoalSettings();
+  const current = getGoalCurrentValues();
 
-  const goals=[
-    {label:'Monthly Revenue (AUD)',cur:mrr,target:15000,fmt:fmt,color:'var(--green)',eta:'Jan 2027'},
-    {label:'Active Clients',cur:clients,target:4,fmt:v=>v+' clients',color:'var(--blue)',eta:'Oct 2026'},
-    {label:'Newsletter Subscribers',cur:subs,target:1000,fmt:v=>v.toLocaleString(),color:'var(--purple)',eta:'Dec 2026'},
-    {label:'SaaS MVP Progress',cur:saas,target:100,fmt:v=>v+'%',color:'var(--amber)',eta:'Jan 2027'},
-    {label:'Client Workshops Delivered',cur:workshops,target:5,fmt:v=>v+' sessions',color:'var(--orange)',eta:'Jan 2027'},
-    {label:'Speaking Invitation',cur:speaking?1:0,target:1,fmt:v=>v?'✓ Secured':'Not yet',color:'var(--gold)',eta:'Online Retailer 2027'},
-    {label:'Inbound-Only Pipeline',cur:inboundPct,target:100,fmt:v=>v+'%',color:'var(--green)',eta:'Jan 2027'},
-  ];
-
-  document.getElementById('goals-list').innerHTML=goals.map(g=>{
-    const p=pct(g.cur,g.target);
-    const status=p>=80?'🟢 On track':p>=40?'🟡 In progress':'🔴 Behind';
+  document.getElementById('goals-list').innerHTML = goals.map(g => {
+    const cur = current[g.key] || 0;
+    const p = g.fmt==='boolean' ? (cur?100:0) : pct(cur, g.target);
+    const status = p>=80?'🟢 On track':p>=40?'🟡 In progress':'🔴 Behind';
+    const color = p>=80?'var(--green)':p>=40?'var(--amber)':'var(--red)';
+    const daysLeft = g.eta ? Math.ceil((new Date(g.eta)-new Date())/86400000) : null;
+    const etaStr = daysLeft !== null ? (daysLeft < 0 ? '⚠️ Overdue' : daysLeft+' days left') : g.eta;
     return `<div class="goal-item">
       <div class="goal-header">
         <span style="font-size:14px;font-weight:500;">${g.label}</span>
         <span style="display:flex;gap:8px;align-items:center;">
           <span style="font-size:11px;color:var(--muted);">${status}</span>
-          <span style="font-size:14px;font-weight:700;color:${g.color}">${p}%</span>
+          <span style="font-size:15px;font-weight:700;color:${color}">${p}%</span>
         </span>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span style="font-size:12px;color:var(--muted);">${g.fmt(g.cur)} of ${g.fmt(g.target)}</span>
-        <span style="font-size:11px;color:var(--muted);">ETA: ${g.eta}</span>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:var(--text);">${formatGoalValue(cur,g.fmt)} <span style="color:var(--muted)">of ${formatGoalValue(g.target,g.fmt)}</span></span>
+        <span style="font-size:11px;color:${daysLeft!==null&&daysLeft<30?'var(--red)':'var(--muted)'};">📅 ${etaStr}</span>
       </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${g.color}"></div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${p}%;background:${color}"></div></div>
     </div>`;
   }).join('');
 
-  document.getElementById('inp-subs').value=subs;
-  document.getElementById('inp-saas').value=saas;
-  document.getElementById('saas-lbl').textContent=saas+'%';
-  document.getElementById('inp-speaking').checked=speaking;
-  document.getElementById('inp-workshops').value=workshops;
-  document.getElementById('workshop-lbl').textContent=workshops;
+  // Populate current value inputs
+  const cv = getGoalCurrentValues();
+  const s = D.settings;
+  if(document.getElementById('inp-subs')) document.getElementById('inp-subs').value = cv.subscribers;
+  if(document.getElementById('inp-saas')) { document.getElementById('inp-saas').value = cv.saas; document.getElementById('saas-lbl').textContent = cv.saas+'%'; }
+  if(document.getElementById('inp-workshops')) { document.getElementById('inp-workshops').value = cv.workshops; document.getElementById('workshop-lbl').textContent = cv.workshops; }
+  if(document.getElementById('inp-speaking')) document.getElementById('inp-speaking').checked = cv.speaking===1;
+  if(document.getElementById('inp-inbound')) document.getElementById('inp-inbound').checked = s.inbound_achieved==='true';
+
+  // Render goal settings table
+  renderGoalSettingsTable(goals, cv);
+}
+
+function renderGoalSettingsTable(goals, current) {
+  const tbody = document.getElementById('goal-settings-tbody');
+  if(!tbody) return;
+  tbody.innerHTML = goals.map(g => {
+    const cur = current[g.key] || 0;
+    return `<tr>
+      <td>
+        <div style="font-size:13px;font-weight:500;">${g.label}</div>
+        <div style="font-size:11px;color:var(--muted);">${g.auto?'🔄 Auto-calculated':'✏️ Manual update'}</div>
+      </td>
+      <td style="font-size:13px;font-weight:600;">${formatGoalValue(cur, g.fmt)}</td>
+      <td>
+        <input type="${g.fmt==='boolean'?'text':'number'}" 
+          class="form-input" 
+          id="gt-target-${g.key}" 
+          value="${g.target}" 
+          style="width:100px;padding:5px 8px;font-size:13px;"
+          ${g.fmt==='boolean'?'disabled placeholder="0 or 1"':'min="0"'}>
+      </td>
+      <td>
+        <input type="date" 
+          class="form-input" 
+          id="gt-eta-${g.key}" 
+          value="${g.eta||''}" 
+          style="width:140px;padding:5px 8px;font-size:13px;">
+      </td>
+      <td>
+        <input type="text" 
+          class="form-input" 
+          id="gt-note-${g.key}" 
+          value="${g.note||''}" 
+          placeholder="Optional note..."
+          style="width:180px;padding:5px 8px;font-size:13px;">
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 async function saveSettings() {
-  const subs=document.getElementById('inp-subs').value;
-  const saas=document.getElementById('inp-saas').value;
-  const speaking=document.getElementById('inp-speaking').checked;
-  const workshops=document.getElementById('inp-workshops').value;
+  const subs = document.getElementById('inp-subs').value;
+  const saas = document.getElementById('inp-saas').value;
+  const speaking = document.getElementById('inp-speaking').checked;
+  const workshops = document.getElementById('inp-workshops').value;
   await sb.from('dashboard_settings').upsert([
-    {key:'newsletter_subscribers',value:subs},
-    {key:'saas_mvp_percent',value:saas},
-    {key:'speaking_invitation',value:speaking.toString()},
-    {key:'workshops_delivered',value:workshops}
+    {key:'newsletter_subscribers', value:subs},
+    {key:'saas_mvp_percent', value:saas},
+    {key:'speaking_invitation', value:speaking.toString()},
+    {key:'workshops_delivered', value:workshops},
   ],{onConflict:'key'});
   await loadAll(); renderGoals();
-  alert('Goals saved!');
+  alert('Values saved! ✅');
+}
+
+async function saveGoalTargets() {
+  const goals = DEFAULT_GOALS;
+  const upserts = [];
+  goals.forEach(g => {
+    const targetEl = document.getElementById(`gt-target-${g.key}`);
+    const etaEl = document.getElementById(`gt-eta-${g.key}`);
+    const noteEl = document.getElementById(`gt-note-${g.key}`);
+    if(targetEl && !g.fmt==='boolean') upserts.push({key:`goal_target_${g.key}`, value:targetEl.value});
+    if(etaEl) upserts.push({key:`goal_eta_${g.key}`, value:etaEl.value});
+    if(noteEl) upserts.push({key:`goal_note_${g.key}`, value:noteEl.value});
+  });
+  if(upserts.length > 0) {
+    await sb.from('dashboard_settings').upsert(upserts, {onConflict:'key'});
+  }
+  await loadAll(); renderGoals();
+  alert('Goal targets & ETAs saved! 🎯');
 }
 
 async function saveReflection() {
