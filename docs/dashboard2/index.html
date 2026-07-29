@@ -114,7 +114,8 @@
   <div class="pin-logo">VS</div>
   <div class="pin-title">VendorScout</div>
   <div class="pin-sub">Enter your PIN to continue</div>
-  <input type="password" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" autocomplete="off" autofocus oninput="checkPin(this.value)" onkeydown="if(event.key==='Enter'){checkPin(this.value)}">
+  <input type="password" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" autocomplete="new-password">
+  <button onclick="checkPin(document.getElementById('pin-input').value)" style="background:#C8A97A;color:#0D1B2A;border:none;border-radius:10px;padding:12px 40px;font-size:16px;font-weight:700;cursor:pointer;font-family:system-ui,sans-serif;">Unlock →</button>
   <div class="pin-error" id="pin-error"></div>
 </div>
 
