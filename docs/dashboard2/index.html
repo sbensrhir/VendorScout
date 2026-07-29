@@ -114,7 +114,7 @@
   <div class="pin-logo">VS</div>
   <div class="pin-title">VendorScout</div>
   <div class="pin-sub">Enter your PIN to continue</div>
-  <input type="password" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric" oninput="checkPin(this.value)" autofocus>
+  <input type="tel" class="pin-input" id="pin-input" maxlength="4" placeholder="••••" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="checkPin(this.value)" autofocus>
   <div class="pin-error" id="pin-error"></div>
 </div>
 
@@ -2075,8 +2075,9 @@ document.head.appendChild(greetingStyle);
 const DASHBOARD_PIN = '2015';
 
 function checkPin(val) {
-  if(val.length < 4) { document.getElementById('pin-error').textContent = ''; return; }
-  if(val === DASHBOARD_PIN) {
+  const clean = val.trim().replace(/\s/g,'');
+  if(clean.length < 4) { document.getElementById('pin-error').textContent = ''; return; }
+  if(clean === DASHBOARD_PIN) {
     sessionStorage.setItem('vs-unlocked','true');
     document.getElementById('pin-screen').classList.add('hidden');
     loadAll();
@@ -2084,7 +2085,7 @@ function checkPin(val) {
   } else {
     document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
     document.getElementById('pin-input').value = '';
-    setTimeout(()=>document.getElementById('pin-error').textContent='', 2000);
+    setTimeout(()=>{ if(document.getElementById('pin-error')) document.getElementById('pin-error').textContent=''; }, 2000);
   }
 }
 
