@@ -137,6 +137,17 @@
 
 <!-- HOME -->
 <div id="tab-home" class="page active">
+
+  <!-- GREETING BANNER -->
+  <div id="greeting-banner" style="border-radius:16px;padding:1.5rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative;">
+    <div style="position:relative;z-index:1;">
+      <div id="greeting-text" style="font-size:24px;font-weight:700;color:white;margin-bottom:4px;"></div>
+      <div id="greeting-sub" style="font-size:14px;color:rgba(255,255,255,0.75);"></div>
+    </div>
+    <div id="greeting-emoji" style="font-size:56px;position:relative;z-index:1;"></div>
+    <div id="greeting-bg-anim" style="position:absolute;inset:0;"></div>
+  </div>
+
   <div id="alerts-bar" style="margin-bottom:1rem;display:none;"></div>
   <div class="kpi-grid">
     <div class="kpi-card">
@@ -777,7 +788,7 @@ async function loadAll() {
   renderAll();
 }
 
-function renderAll() { renderKPIs(); renderTasks(); renderHomeFunnel(); renderUrgent(); renderHomeContent(); renderAlerts(); }
+function renderAll() { renderGreeting(); renderKPIs(); renderTasks(); renderHomeFunnel(); renderUrgent(); renderHomeContent(); renderAlerts(); }
 
 function renderAlerts() {
   const alerts = [];
@@ -1601,8 +1612,156 @@ async function delCert(id) {
   await loadAll(); renderKnowledge();
 }
 
-// PIN LOCK
-const DASHBOARD_PIN = '2015';
+const MOTIVATIONAL = [
+  "Every expert was once a beginner. You're building something real.",
+  "The brands that will hire you next month are reading your posts today.",
+  "Consistency beats perfection. Post. Outreach. Repeat.",
+  "Your Amazon expertise is rare in Australia. Own it.",
+  "One client away from momentum. Keep going.",
+  "The digital shelf is wide open. You're the one mapping it.",
+  "Revenue follows reputation. Build the reputation first.",
+  "Inbound is earned, not bought. Your content is working.",
+  "Go-To Skincare found YOU. More will come.",
+  "You left a salary to build something bigger. Don't look back.",
+  "The best post you'll ever write is the next one.",
+  "Your newsletter is someone's favourite Monday morning read.",
+  "Every no is a redirect to a better yes.",
+  "Sydney's leading Amazon AU expert. That's you. Act like it.",
+];
+
+const ACTION_SENTENCES = {
+  morning: [
+    "Let's go. Today is the day.",
+    "Ship something today. Anything.",
+    "Make one decision before lunch.",
+    "Today's actions build tomorrow's clients.",
+    "Open laptop. Change industry.",
+  ],
+  afternoon: [
+    "Still time to make today count.",
+    "The afternoon belongs to the focused.",
+    "One more outreach. One more post. Go.",
+    "Don't slow down now.",
+    "Finish what you started this morning.",
+  ],
+  evening: [
+    "Reflect. Adjust. Come back stronger.",
+    "What got done today? What ships tomorrow?",
+    "The best founders review before they rest.",
+    "Log your wins. They matter.",
+    "Croissant earned. Dashboard updated. ✅",
+  ],
+  night: [
+    "Rest is part of the strategy.",
+    "Tomorrow you ship. Tonight you recharge.",
+    "Sleep well. The grind resumes at dawn.",
+    "Bonne nuit. Big things coming.",
+    "The best ideas come after sleep.",
+  ],
+};
+
+// Animated emoji components as inline SVG/HTML
+const ANIMATIONS = {
+  sun: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;">
+    <style>
+      @keyframes vs-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+      @keyframes vs-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+      @keyframes vs-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+      @keyframes vs-twinkle{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+      @keyframes vs-rock{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+      @keyframes vs-glow{0%,100%{filter:drop-shadow(0 0 4px #FCD34D)}50%{filter:drop-shadow(0 0 12px #FCD34D)}}
+    </style>
+    <svg viewBox="0 0 70 70" width="70" height="70" style="animation:vs-glow 2s ease-in-out infinite;">
+      <g transform="translate(35,35)" style="animation:vs-spin 12s linear infinite;transform-origin:0 0;">
+        ${[0,45,90,135,180,225,270,315].map(a=>`
+          <line x1="0" y1="-20" x2="0" y2="-28" stroke="#FCD34D" stroke-width="3" stroke-linecap="round"
+            transform="rotate(${a})"/>`).join('')}
+      </g>
+      <circle cx="35" cy="35" r="14" fill="#FBBF24" style="animation:vs-pulse 2s ease-in-out infinite;transform-origin:35px 35px;"/>
+    </svg>
+  </div>`,
+
+  cloud: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+    <svg viewBox="0 0 80 60" width="80" height="60" style="animation:vs-float 4s ease-in-out infinite;">
+      <circle cx="25" cy="35" r="15" fill="white" opacity="0.9"/>
+      <circle cx="42" cy="28" r="18" fill="white" opacity="0.9"/>
+      <circle cx="58" cy="34" r="13" fill="white" opacity="0.9"/>
+      <rect x="12" y="35" width="58" height="15" rx="7" fill="white" opacity="0.9"/>
+      <circle cx="55" cy="18" r="10" fill="#FBBF24" opacity="0.9" style="animation:vs-pulse 3s ease-in-out infinite;transform-origin:55px 18px;"/>
+    </svg>
+  </div>`,
+
+  croissant: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+    <div style="font-size:52px;line-height:1;animation:vs-rock 3s ease-in-out infinite;display:inline-block;transform-origin:center bottom;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));">🥐</div>
+  </div>`,
+
+  moon: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+    <svg viewBox="0 0 70 70" width="70" height="70" style="animation:vs-float 5s ease-in-out infinite;">
+      <path d="M42,15 Q28,25 28,35 Q28,48 42,55 Q20,55 18,35 Q18,18 42,15Z" fill="#E2E8F0" opacity="0.95"/>
+      ${[[50,12],[58,28],[52,45],[15,55],[8,30],[20,15]].map(([x,y],i)=>`
+        <circle cx="${x}" cy="${y}" r="${1.5+i%2}" fill="white" style="animation:vs-twinkle ${1+i*0.4}s ease-in-out infinite;transform-origin:${x}px ${y}px;"/>`).join('')}
+    </svg>
+  </div>`,
+};
+
+function renderGreeting() {
+  const now = new Date();
+  const hour = now.getHours();
+  const banner = document.getElementById('greeting-banner');
+  const text = document.getElementById('greeting-text');
+  const sub = document.getElementById('greeting-sub');
+  const emojiEl = document.getElementById('greeting-emoji');
+  const bg = document.getElementById('greeting-bg-anim');
+
+  const dayIndex = now.getDate() % MOTIVATIONAL.length;
+  const actionIndex = now.getDate() % 5;
+
+  let timeKey, greeting, gradient, anim;
+
+  if(hour >= 5 && hour < 12) {
+    timeKey = 'morning';
+    greeting = 'Good morning, Sahar';
+    gradient = 'linear-gradient(135deg, #92400E 0%, #D97706 40%, #FBBF24 100%)';
+    anim = ANIMATIONS.sun;
+  } else if(hour >= 12 && hour < 17) {
+    timeKey = 'afternoon';
+    greeting = 'Good afternoon, Sahar';
+    gradient = 'linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 60%, #60A5FA 100%)';
+    anim = ANIMATIONS.cloud;
+  } else if(hour >= 17 && hour < 21) {
+    timeKey = 'evening';
+    greeting = 'Bonne soirée, Sahar';
+    gradient = 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #C8A97A 100%)';
+    anim = ANIMATIONS.croissant;
+  } else {
+    timeKey = 'night';
+    greeting = 'Bonne nuit, Sahar';
+    gradient = 'linear-gradient(135deg, #0D1B2A 0%, #1E1B4B 60%, #4338CA 100%)';
+    anim = ANIMATIONS.moon;
+  }
+
+  const quote = MOTIVATIONAL[dayIndex];
+  const action = ACTION_SENTENCES[timeKey][actionIndex];
+
+  banner.style.background = gradient;
+  text.innerHTML = `<div style="font-size:22px;font-weight:700;color:white;margin-bottom:6px;">${greeting}</div>
+    <div style="font-size:15px;color:rgba(255,255,255,0.85);margin-bottom:4px;">${quote}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);font-style:italic;">${action}</div>`;
+  sub.textContent = '';
+  emojiEl.innerHTML = anim;
+  bg.innerHTML = '';
+}
+
+const greetingStyle = document.createElement('style');
+greetingStyle.textContent = `
+  @keyframes vs-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes vs-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+  @keyframes vs-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes vs-twinkle{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
+  @keyframes vs-rock{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+  @keyframes vs-glow{0%,100%{filter:drop-shadow(0 0 4px #FCD34D)}50%{filter:drop-shadow(0 0 14px #FCD34D)}}
+`;
+document.head.appendChild(greetingStyle);
 
 function checkPin(val) {
   if(val.length < 4) { document.getElementById('pin-error').textContent = ''; return; }
