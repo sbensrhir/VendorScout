@@ -862,25 +862,34 @@ function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
 async function loadAll() {
-  const [t,p,c,s,r,st,tr,ce] = await Promise.all([
-    sb.from('weekly_tasks').select('*').eq('week_start',weekStart()),
-    sb.from('pipeline').select('*').order('next_action_date',{ascending:true}),
-    sb.from('content_calendar').select('*').order('post_date',{ascending:false}),
-    sb.from('warm_signals').select('*').order('signal_date',{ascending:false}),
-    sb.from('revenue').select('*').order('start_date',{ascending:false}),
-    sb.from('dashboard_settings').select('*'),
-    sb.from('training_resources').select('*').order('created_at',{ascending:false}),
-    sb.from('certifications').select('*').order('date_earned',{ascending:false})
-  ]);
-  D.tasks = t.data||[];
-  D.pipeline = p.data||[];
-  D.content = c.data||[];
-  D.signals = s.data||[];
-  D.revenue = r.data||[];
-  D.settings = {};
-  (st.data||[]).forEach(r=>D.settings[r.key]=r.value);
-  D.training = tr.data||[];
-  D.certs = ce.data||[];
+  try {
+    const [t,p,c,s,r,st] = await Promise.all([
+      sb.from('weekly_tasks').select('*').eq('week_start',weekStart()),
+      sb.from('pipeline').select('*').order('next_action_date',{ascending:true}),
+      sb.from('content_calendar').select('*').order('post_date',{ascending:false}),
+      sb.from('warm_signals').select('*').order('signal_date',{ascending:false}),
+      sb.from('revenue').select('*').order('start_date',{ascending:false}),
+      sb.from('dashboard_settings').select('*')
+    ]);
+    D.tasks = t.data||[];
+    D.pipeline = p.data||[];
+    D.content = c.data||[];
+    D.signals = s.data||[];
+    D.revenue = r.data||[];
+    D.settings = {};
+    (st.data||[]).forEach(r=>D.settings[r.key]=r.value);
+  } catch(e) { console.warn('Core tables error:', e); }
+
+  try {
+    const tr = await sb.from('training_resources').select('*').order('created_at',{ascending:false});
+    D.training = tr.data||[];
+  } catch(e) { D.training = []; console.warn('training_resources missing'); }
+
+  try {
+    const ce = await sb.from('certifications').select('*').order('date_earned',{ascending:false});
+    D.certs = ce.data||[];
+  } catch(e) { D.certs = []; console.warn('certifications missing'); }
+
   renderAll();
 }
 
