@@ -1538,8 +1538,6 @@ async function loadPastRefs() {
     </div>`).join('');
 }
 
-}
-
 // ─── WEEKLY BRIDGE (WBR) ───────────────────────────────────────────
 const WBR_METRICS = [
   { key:'revenue',     label:'Monthly Revenue',         target_default:0,  hint:'MRR added or confirmed this week?' },
@@ -1807,18 +1805,18 @@ function renderKnowledge() {
         const statusColors={'Planned':'#F1F5F9:#64748B','In Progress':'#FEF3C7:#92400E','Active':'#D1FAE5:#065F46','Expired':'#FEE2E2:#991B1B'};
         const [sbg,scol]=(statusColors[c.status]||'#F1F5F9:#64748B').split(':');
         const isExpiring = c.expiry_date && new Date(c.expiry_date) < new Date(Date.now()+30*86400000);
-        return `<tr>
-          <td><strong>${c.name}</strong>${c.cert_url?` <a href="${c.cert_url}" target="_blank" style="color:var(--blue);font-size:11px;">View ↗</a>`:''}</td>
-          <td>${c.issuer||'—'}</td>
-          <td>${c.category||'—'}</td>
-          <td>${c.date_earned||'—'}</td>
-          <td style="color:${isExpiring?'var(--red)':'inherit'}">${c.expiry_date||'—'}${isExpiring?' ⚠️':''}</td>
-          <td><span class="badge" style="background:${sbg};color:${scol}">${c.status}</span></td>
-          <td style="display:flex;gap:4px;">
-            <button class="btn-sm" onclick="editCert('${c.id}')">Edit</button>
-            <button class="btn-sm" style="color:var(--red);" onclick="delCert('${c.id}')">✕</button>
-          </td>
-        </tr>`;
+        return '<tr>' +
+          '<td><strong>' + c.name + '</strong>' + (c.cert_url ? ' <a href="' + c.cert_url + '" target="_blank" style="color:var(--blue);font-size:11px;">View ↗</a>' : '') + '</td>' +
+          '<td>' + (c.issuer||'—') + '</td>' +
+          '<td>' + (c.category||'—') + '</td>' +
+          '<td>' + (c.date_earned||'—') + '</td>' +
+          '<td style="color:' + (isExpiring?'var(--red)':'inherit') + '">' + (c.expiry_date||'—') + (isExpiring?' ⚠️':'') + '</td>' +
+          '<td><span class="badge" style="background:' + sbg + ';color:' + scol + '">' + c.status + '</span></td>' +
+          '<td style="display:flex;gap:4px;">' +
+            '<button class="btn-sm" onclick="editCert(\'' + c.id + '\')">Edit</button>' +
+            '<button class="btn-sm" style="color:var(--red);" onclick="delCert(\'' + c.id + '\')">✕</button>' +
+          '</td>' +
+        '</tr>';
       }).join('');
 }
 
