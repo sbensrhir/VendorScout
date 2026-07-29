@@ -1600,7 +1600,7 @@ async function delCert(id) {
   await loadAll(); renderKnowledge();
 }
 
-// PIN LOCK — change this to your preferred 4-digit PIN
+// PIN LOCK
 const DASHBOARD_PIN = '2015';
 
 function checkPin(val) {
@@ -1609,6 +1609,7 @@ function checkPin(val) {
     sessionStorage.setItem('vs-unlocked','true');
     document.getElementById('pin-screen').classList.add('hidden');
     loadAll();
+    setInterval(loadAll, 60000);
   } else {
     document.getElementById('pin-error').textContent = 'Incorrect PIN — try again';
     document.getElementById('pin-input').value = '';
@@ -1616,14 +1617,12 @@ function checkPin(val) {
   }
 }
 
-// Check if already unlocked this session
+// Already unlocked this session — skip PIN
 if(sessionStorage.getItem('vs-unlocked')==='true') {
   document.getElementById('pin-screen').classList.add('hidden');
-  document.addEventListener('DOMContentLoaded', loadAll);
+  loadAll();
+  setInterval(loadAll, 60000);
 }
-
-loadAll();
-setInterval(loadAll, 60000);
 </script>
 </body>
 </html>
