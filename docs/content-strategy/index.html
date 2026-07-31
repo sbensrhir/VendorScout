@@ -117,15 +117,15 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
   <!-- Tabs -->
   <div class="tab-row">
     <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
-    <button class="tab" onclick="switchTab('upcoming',this)">📅 Upcoming posts</button>
-    <button class="tab" onclick="switchTab('sequence',this)">🗂 Publishing sequence</button>
-    <button class="tab" onclick="switchTab('p1a',this)">1a · Retail landscape</button>
-    <button class="tab" onclick="switchTab('p1b',this)">1b · Brand performance</button>
-    <button class="tab" onclick="switchTab('p1c',this)">1c · Category trends</button>
-    <button class="tab" onclick="switchTab('p2a',this)">2a · Amazon mastery</button>
-    <button class="tab" onclick="switchTab('p2b',this)">2b · Channel architecture</button>
-    <button class="tab" onclick="switchTab('p2c',this)">2c · Brand decisions</button>
-    <button class="tab" onclick="switchTab('p2d',this)">2d · Profitability & ops</button>
+    <button class="tab" onclick="switchTab('upcoming',this)">📅 Upcoming</button>
+    <button class="tab" onclick="switchTab('sequence',this)">🗂 Sequence</button>
+    <button class="tab" onclick="switchTab('p1a',this)" title="1a · Retail landscape">🏪 Retail</button>
+    <button class="tab" onclick="switchTab('p1b',this)" title="1b · Brand performance">📊 Brands</button>
+    <button class="tab" onclick="switchTab('p1c',this)" title="1c · Category trends">📈 Trends</button>
+    <button class="tab" onclick="switchTab('p2a',this)" title="2a · Amazon mastery">🎯 Amazon</button>
+    <button class="tab" onclick="switchTab('p2b',this)" title="2b · Channel architecture">🔀 Channels</button>
+    <button class="tab" onclick="switchTab('p2c',this)" title="2c · Brand decisions">🧠 Strategy</button>
+    <button class="tab" onclick="switchTab('p2d',this)" title="2d · Profitability & ops">💰 Profit & Ops</button>
   </div>
 
   <!-- OVERVIEW -->
@@ -149,15 +149,15 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
         <div style="font-size:12px;color:var(--text);margin-bottom:1rem;font-style:italic;">Goal: Build authority. Make founders and CMOs think "she knows my market better than I do."</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <div onclick="switchTab('p1a',document.querySelectorAll('.tab')[3])" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
-            <div style="font-size:12px;font-weight:600;">1a — Retail landscape</div>
+            <div style="font-size:12px;font-weight:600;">🏪 1a — Retail landscape</div>
             <div style="font-size:11px;color:var(--muted);">Who owns the shelf, how power is shifting</div>
           </div>
           <div onclick="switchTab('p1b',document.querySelectorAll('.tab')[4])" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
-            <div style="font-size:12px;font-weight:600;">1b — Brand performance</div>
+            <div style="font-size:12px;font-weight:600;">📊 1b — Brand performance</div>
             <div style="font-size:11px;color:var(--muted);">Which brands win where — proprietary data</div>
           </div>
           <div onclick="switchTab('p1c',document.querySelectorAll('.tab')[5])" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
-            <div style="font-size:12px;font-weight:600;">1c — Category trends</div>
+            <div style="font-size:12px;font-weight:600;">📈 1c — Category trends</div>
             <div style="font-size:11px;color:var(--muted);">Trends anchored to commercial implications only</div>
           </div>
         </div>
@@ -171,19 +171,19 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
         <div style="font-size:12px;color:var(--text);margin-bottom:1rem;font-style:italic;">Goal: Convert authority into clients. Make eComm directors think "I need her on my team."</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <div onclick="switchTab('p2a',document.querySelectorAll('.tab')[6])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
-            <div style="font-size:12px;font-weight:600;">2a — Amazon AU mastery</div>
+            <div style="font-size:12px;font-weight:600;">🎯 2a — Amazon AU mastery</div>
             <div style="font-size:11px;color:var(--muted);">PDP, ads, pricing, Beauty Page, GEO/SEO — practitioner level</div>
           </div>
           <div onclick="switchTab('p2b',document.querySelectorAll('.tab')[7])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
-            <div style="font-size:12px;font-weight:600;">2b — Channel architecture</div>
+            <div style="font-size:12px;font-weight:600;">🔀 2b — Channel architecture</div>
             <div style="font-size:11px;color:var(--muted);">DTC vs Amazon vs retail as a system — margin, conflict</div>
           </div>
           <div onclick="switchTab('p2c',document.querySelectorAll('.tab')[8])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
-            <div style="font-size:12px;font-weight:600;">2c — Brand & commercial decisions</div>
+            <div style="font-size:12px;font-weight:600;">🧠 2c — Brand & commercial decisions</div>
             <div style="font-size:11px;color:var(--muted);">Senior advisory layer — strategy, AVN, capability</div>
           </div>
           <div onclick="switchTab('p2d',document.querySelectorAll('.tab')[9])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
-            <div style="font-size:12px;font-weight:600;">2d — Profitability, operations & growth</div>
+            <div style="font-size:12px;font-weight:600;">💰 2d — Profitability, operations & growth</div>
             <div style="font-size:11px;color:var(--muted);">Unit economics, FBA, P&L — white space content</div>
           </div>
         </div>
