@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorScout — Content Strategy</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230D1B2A'/><text x='50%' y='50%' dominant-baseline='central' text-anchor='middle' font-family='system-ui,sans-serif' font-size='13' font-weight='800' fill='%23C8A97A'>VS</text></svg>">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --navy:#0D1B2A; --gold:#C8A97A; --bg:#F4F6F9; --card:#ffffff;
+  --border:#E2E8F0; --text:#1A202C; --muted:#718096;
+  --green:#2A9D8F; --amber:#E9C46A; --red:#E63946; --blue:#4A90D9;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
+
+/* NAV */
+nav { background:var(--navy); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:56px; position:sticky; top:0; z-index:100; }
+.nav-brand { color:var(--gold); font-size:18px; font-weight:600; display:flex; align-items:center; gap:10px; }
+.nav-logo { width:32px; height:32px; background:var(--gold); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--navy); }
+.nav-links { display:flex; gap:8px; }
+.nav-link { color:rgba(255,255,255,0.5); text-decoration:none; font-size:13px; padding:6px 12px; border-radius:6px; transition:all 0.2s; }
+.nav-link:hover { color:white; background:rgba(255,255,255,0.1); }
+.nav-link.active { color:var(--gold); }
+
+/* HERO */
+.hero { background:linear-gradient(135deg,#0D1B2A 0%,#1a2f45 100%); padding:4rem 2rem; }
+.hero-inner { max-width:1200px; margin:0 auto; }
+.hero-tag { font-size:11px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+.hero-title { font-size:36px; font-weight:700; color:var(--gold); margin-bottom:12px; line-height:1.2; }
+.hero-sub { font-size:16px; color:rgba(255,255,255,0.6); max-width:600px; line-height:1.7; margin-bottom:2rem; }
+.thesis-box { background:rgba(255,255,255,0.05); border:1px solid rgba(200,169,122,0.3); border-radius:12px; padding:1.25rem 1.5rem; display:inline-block; }
+.thesis-label { font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.thesis-text { font-size:15px; color:white; font-style:italic; line-height:1.6; }
+
+/* LAYOUT */
+.main { max-width:1200px; margin:0 auto; padding:2rem; }
+
+/* TABS */
+.tab-row { display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:2rem; overflow-x:auto; padding-bottom:0; }
+.tab { background:none; border:none; padding:10px 18px; font-size:13px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; transition:all 0.2s; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--navy); border-bottom:2px solid var(--gold); font-weight:600; }
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* CARDS */
+.card { background:var(--card); border-radius:12px; border:1px solid var(--border); padding:1.5rem; }
+.card-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+.card-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+
+/* PILLAR HEADER */
+.pillar-header { border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1rem; }
+.pillar-tag { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; opacity:0.5; margin-bottom:4px; }
+.pillar-title { font-size:22px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+.pillar-desc { font-size:13px; opacity:0.65; line-height:1.6; }
+
+/* META CARDS */
+.meta-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+.persona-row { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
+.dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.persona-name { font-size:13px; font-weight:500; color:var(--text); margin:0; }
+.persona-sub { font-size:11px; color:var(--muted); margin:0; }
+.pain-tag { font-size:12px; padding:5px 10px; border-radius:8px; margin-bottom:4px; display:block; }
+.hook-box { background:#FFFBEB; border:1px solid #FCD34D; border-radius:8px; padding:10px 12px; font-size:12px; color:#92400E; font-style:italic; line-height:1.6; }
+
+/* TOPICS */
+.topic-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.topic-card { border-radius:8px; padding:10px 12px; }
+.topic-title { font-size:12px; font-weight:600; margin:0 0 3px; }
+.topic-desc { font-size:11px; margin:0; }
+
+/* FILTER */
+.filter-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.filter-item { font-size:12px; padding:6px 10px; border-radius:8px; margin-bottom:4px; display:block; }
+
+/* OVERVIEW PILLARS */
+.overview-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+.subpillar-link { background:var(--bg); border-radius:8px; padding:10px 12px; cursor:pointer; transition:all 0.2s; border:1px solid transparent; }
+.subpillar-link:hover { border-color:var(--gold); background:#FFFBEB; }
+.subpillar-name { font-size:12px; font-weight:600; color:var(--text); margin:0 0 2px; }
+.subpillar-desc { font-size:11px; color:var(--muted); margin:0; }
+.dots-row { display:flex; gap:3px; margin-top:8px; }
+
+/* NEWSLETTER BOX */
+.nl-box { background:var(--navy); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; display:grid; grid-template-columns:1fr auto; gap:1.5rem; align-items:center; }
+.nl-tag { font-size:10px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:4px; }
+.nl-title { font-size:18px; font-weight:600; color:var(--gold); margin-bottom:6px; }
+.nl-desc { font-size:13px; color:rgba(255,255,255,0.6); line-height:1.6; }
+.nl-stat { text-align:center; background:rgba(255,255,255,0.05); border-radius:10px; padding:1rem 1.5rem; }
+.nl-num { font-size:32px; font-weight:700; color:white; }
+.nl-sub { font-size:11px; color:rgba(255,255,255,0.4); }
+
+/* FLYWHEEL */
+.flywheel { display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--bg); border-radius:10px; padding:1rem 1.25rem; }
+.fw-step { background:white; border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-size:12px; color:var(--text); white-space:nowrap; }
+.fw-arrow { color:var(--muted); font-size:16px; }
+
+/* BACK LINK */
+.back-link { color:rgba(255,255,255,0.4); text-decoration:none; font-size:12px; display:flex; align-items:center; gap:6px; }
+.back-link:hover { color:var(--gold); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">VS</div>
+    VendorScout
+  </div>
+  <div class="nav-links">
+    <a href="../dashboard2/" class="nav-link">← Dashboard</a>
+    <a href="#" class="nav-link active">Content Strategy</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">VendorScout · Content Framework 2026</div>
+    <div class="hero-title">The complete content strategy</div>
+    <div class="hero-sub">Two pillars. Seven sub-pillars. One newsletter. Every post serves a purpose — building authority, attracting the right clients, and converting both into revenue.</div>
+    <div class="thesis-box">
+      <div class="thesis-label">The central thesis</div>
+      <div class="thesis-text">"I understand AU beauty. I understand Amazon AU.<br>I'm the only one in Australia who understands both."</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Flywheel -->
+  <div style="margin-bottom:2rem;">
+    <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">The content flywheel</div>
+    <div class="flywheel">
+      <div class="fw-step">Post builds authority</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-step">Authority builds trust</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-step">Trust builds inbound</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-step">Inbound becomes clients</div>
+      <div class="fw-arrow">→</div>
+      <div class="fw-step">Clients fund more content</div>
+      <div class="fw-arrow">↺</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+    <button class="tab" onclick="switchTab('p1a',this)">1a · Retail landscape</button>
+    <button class="tab" onclick="switchTab('p1b',this)">1b · Brand performance</button>
+    <button class="tab" onclick="switchTab('p1c',this)">1c · Category trends</button>
+    <button class="tab" onclick="switchTab('p2a',this)">2a · Amazon mastery</button>
+    <button class="tab" onclick="switchTab('p2b',this)">2b · Channel architecture</button>
+    <button class="tab" onclick="switchTab('p2c',this)">2c · Brand decisions</button>
+    <button class="tab" onclick="switchTab('p2d',this)">2d · Profitability & ops</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="panel-overview" class="panel active">
+
+    <div class="overview-grid">
+
+      <!-- P1 -->
+      <div class="card" style="border-left:4px solid #4A90D9;">
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;">Pillar 1 · Tuesday 12pm</div>
+          <div style="font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px;">Market intelligence</div>
+          <div style="font-size:13px;color:var(--muted);">What's happening in AU beauty and eCommerce</div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div class="meta-label">Goal</div>
+          <div style="font-size:13px;color:var(--text);">Build authority and reach. Make founders and CMOs think <em>"she knows my market better than I do."</em></div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div class="meta-label">Sub-pillars</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div class="subpillar-link" onclick="switchTab('p1a',document.querySelectorAll('.tab')[1])">
+              <div class="subpillar-name">1a — Retail landscape</div>
+              <div class="subpillar-desc">Who owns the shelf, how power is shifting, which retailers win and lose</div>
+            </div>
+            <div class="subpillar-link" onclick="switchTab('p1b',document.querySelectorAll('.tab')[2])">
+              <div class="subpillar-name">1b — Brand performance</div>
+              <div class="subpillar-desc">Which brands win on which channels — powered by proprietary scraping data</div>
+            </div>
+            <div class="subpillar-link" onclick="switchTab('p1c',document.querySelectorAll('.tab')[3])">
+              <div class="subpillar-name">1c — Category trends</div>
+              <div class="subpillar-desc">Trends always anchored to commercial implications — never just "X is rising"</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="meta-label">Reach potential</div>
+          <div class="dots-row">
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Highest — travels beyond specialist audience</div>
+        </div>
+      </div>
+
+      <!-- P2 -->
+      <div class="card" style="border-left:4px solid var(--gold);border:2px solid var(--gold);">
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;">Pillar 2 · Thursday 8am · Core differentiator</div>
+          <div style="font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px;">Commercial strategy</div>
+          <div style="font-size:13px;color:var(--muted);">What brands should do about it</div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div class="meta-label">Goal</div>
+          <div style="font-size:13px;color:var(--text);">Convert authority into clients. Make eComm directors and founders think <em>"I need her on my team."</em></div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div class="meta-label">Sub-pillars</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div class="subpillar-link" style="border-color:#FCD34D;" onclick="switchTab('p2a',document.querySelectorAll('.tab')[4])">
+              <div class="subpillar-name">2a — Amazon AU mastery</div>
+              <div class="subpillar-desc">PDP, ads, pricing, Beauty Page, GEO/SEO, launch — practitioner level</div>
+            </div>
+            <div class="subpillar-link" style="border-color:#FCD34D;" onclick="switchTab('p2b',document.querySelectorAll('.tab')[5])">
+              <div class="subpillar-name">2b — Channel architecture</div>
+              <div class="subpillar-desc">DTC vs Amazon vs retail as a system — margin, conflict, pricing coherence</div>
+            </div>
+            <div class="subpillar-link" style="border-color:#FCD34D;" onclick="switchTab('p2c',document.querySelectorAll('.tab')[6])">
+              <div class="subpillar-name">2c — Brand & commercial decisions</div>
+              <div class="subpillar-desc">Senior advisory layer — strategy, AVN, agency briefing, capability</div>
+            </div>
+            <div class="subpillar-link" style="border-color:#FCD34D;" onclick="switchTab('p2d',document.querySelectorAll('.tab')[7])">
+              <div class="subpillar-name">2d — Profitability, operations & growth</div>
+              <div class="subpillar-desc">Unit economics, FBA, P&L, inventory — white space content nobody else covers</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="meta-label">Conversion potential</div>
+          <div class="dots-row">
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+            <span class="dot" style="background:var(--gold);width:10px;height:10px;"></span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Highest — directly converts warm leads into clients</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Newsletter -->
+    <div class="nl-box">
+      <div>
+        <div class="nl-tag">Bi-weekly · The synthesis layer</div>
+        <div class="nl-title">APAC E-Commerce Intelligence</div>
+        <div class="nl-desc">Combines Pillar 1 data with Pillar 2 strategic implication. Structure: what's happening + what smart brands are doing about it + one data point nobody else is sharing. Converts followers into subscribers, subscribers into clients.</div>
+      </div>
+      <div class="nl-stat">
+        <div class="nl-num">250</div>
+        <div class="nl-sub">now → 1,000</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:1rem;">The filter — ask before every post</div>
+      <div class="filter-grid">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px;">✓ Write it if...</div>
+          <span class="filter-item" style="background:#D1FAE5;color:#065F46;">A beauty brand eComm director finds this useful for a real business decision</span>
+          <span class="filter-item" style="background:#D1FAE5;color:#065F46;">Nobody else in AU has this data or this angle</span>
+          <span class="filter-item" style="background:#D1FAE5;color:#065F46;">It makes them think "I need to talk to Sahar"</span>
+          <span class="filter-item" style="background:#D1FAE5;color:#065F46;">It's anchored to a commercial implication</span>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:8px;">✗ Skip it if...</div>
+          <span class="filter-item" style="background:#FEE2E2;color:#991B1B;">It's a beauty trend with no commercial implication</span>
+          <span class="filter-item" style="background:#FEE2E2;color:#991B1B;">It could have been written by any beauty journalist</span>
+          <span class="filter-item" style="background:#FEE2E2;color:#991B1B;">It attracts consumers not decision-makers</span>
+          <span class="filter-item" style="background:#FEE2E2;color:#991B1B;">You can't answer "so what for a brand?"</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SUB-PILLAR TEMPLATE FUNCTION -->
+  <!-- 1a -->
+  <div id="panel-p1a" class="panel">
+    <div class="pillar-header" style="background:#1a2f45;color:white;">
+      <div class="pillar-tag">Pillar 1a · Market intelligence</div>
+      <div class="pillar-title">Retail landscape</div>
+      <div class="pillar-desc">Who owns the AU beauty shelf, how power is shifting and what it means for brands choosing where to distribute</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">Beauty brand founders</p><p class="persona-sub">Evaluating distribution options</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#8B5CF6;"></span><div><p class="persona-name">CMOs</p><p class="persona-sub">Tracking competitive landscape</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#10B981;"></span><div><p class="persona-name">Investors & press</p><p class="persona-sub">Amplifiers — share and cite your data</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Pain points it solves</div>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Where is AU beauty retail actually going?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Which channels are actually growing?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Is Chemist Warehouse a threat or opportunity?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"How does Amazon fit into AU retail?"</span>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Bubble charts, power matrices, market share maps, growth rate comparisons. Always visual-first with proprietary data.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"Chemist Warehouse grew 17.9% in Q1 2026. Sephora posted a $13.6M loss. The gap between them tells you everything about AU beauty retail right now."</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — ready to write</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Who owns AU beauty retail in 2026</p><p class="topic-desc" style="color:#0369A1;">Mecca $1.3B · CW $10.3B · W Cosmetics $310M · Amazon +31% — mapped by revenue and growth rate</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Sephora is losing in Australia</p><p class="topic-desc" style="color:#0369A1;">Why Mecca built a moat that $1B of global brand equity couldn't break</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Chemist Warehouse +17.9%</p><p class="topic-desc" style="color:#0369A1;">What's actually driving the growth and which beauty categories are winning</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">W Cosmetics — the $310M retailer nobody talks about</p><p class="topic-desc" style="color:#0369A1;">Australia's Olive Young and why every beauty brand should be paying attention</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">The consolidation of AU pharmacy</p><p class="topic-desc" style="color:#0369A1;">What happens to indie beauty brands when CW controls 50%+ of pharmacy volume</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">How Amazon is taking share from physical retail</p><p class="topic-desc" style="color:#0369A1;">Category by category — skincare, oral care, supplements — the shift is structural</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1b -->
+  <div id="panel-p1b" class="panel">
+    <div class="pillar-header" style="background:#1a2f45;color:white;">
+      <div class="pillar-tag">Pillar 1b · Market intelligence</div>
+      <div class="pillar-title">Brand performance</div>
+      <div class="pillar-desc">Which specific brands are winning or losing on which channels and why — powered by proprietary scraping data nobody else has</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#F97316;"></span><div><p class="persona-name">eComm & digital managers</p><p class="persona-sub">Benchmarking competitors on Amazon</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">Brand managers</p><p class="persona-sub">Understanding their category landscape</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#8B5CF6;"></span><div><p class="persona-name">Founders pre-launch</p><p class="persona-sub">Understanding what they're up against</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Pain points it solves</div>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"How much revenue is [competitor] making on Amazon AU?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Why are Korean brands beating us on Amazon?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"What does a winning Amazon AU brand look like?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Is the AU skincare opportunity on Amazon real?"</span>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Brand deep dives, BSR analysis, revenue estimates, competitive category maps. Your scraper gives you data nobody else has — this is your most proprietary content.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"CeraVe generates an estimated $21M per year on Amazon AU. Here's exactly how they do it — and why no Australian brand has copied the playbook."</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — ready to write</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">CeraVe $21M/year on Amazon AU</p><p class="topic-desc" style="color:#0369A1;">How one brand owns clinical skincare with 45 ASINs and one hero product generating 27.9% of total GMV</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">La Roche-Posay $44M/year on Amazon AU</p><p class="topic-desc" style="color:#0369A1;">The widest moat in AU pharmacy skincare — and what makes it defensible against new entrants</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Korean brands took 51% of Amazon AU top skincare</p><p class="topic-desc" style="color:#0369A1;">COSRX, Anua, Medicube — how they did it with zero AU retail presence and what it means for local brands</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Paula's Choice — the $2.5M opportunity left on the table</p><p class="topic-desc" style="color:#0369A1;">110 SKUs globally. 20 on Amazon AU. The most underinvested brand in AU eCommerce.</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Australian brands hold 3% of Amazon AU top skincare</p><p class="topic-desc" style="color:#0369A1;">The most uncomfortable chart in AU beauty — and why it represents the biggest opportunity</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Who's winning Amazon AU sensitive skincare in 2026</p><p class="topic-desc" style="color:#0369A1;">A live BSR analysis of the category that is about to get very competitive</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1c -->
+  <div id="panel-p1c" class="panel">
+    <div class="pillar-header" style="background:#1a2f45;color:white;">
+      <div class="pillar-tag">Pillar 1c · Market intelligence</div>
+      <div class="pillar-title">Category trends — commercial lens</div>
+      <div class="pillar-desc">Trends only when anchored to a commercial implication. Never "X is rising" — always "X is rising and here's what it means for your P&L or positioning"</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#8B5CF6;"></span><div><p class="persona-name">CMOs & marketing directors</p><p class="persona-sub">Tracking category shifts for positioning</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">Product & NPD teams</p><p class="persona-sub">Understanding market demand signals</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#10B981;"></span><div><p class="persona-name">Global beauty press</p><p class="persona-sub">APAC angle nobody else covers</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">The golden rule</div>
+        <div style="background:#FEF3C7;border-radius:8px;padding:10px 12px;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:600;color:#92400E;margin-bottom:4px;">Always ask: so what?</div>
+          <div style="font-size:12px;color:#92400E;">Every trend must connect to a channel decision, positioning shift or commercial opportunity. If you can't answer "so what for a brand?" — don't write it.</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);font-style:italic;">Not: "K-beauty is trending globally"<br><br>Yes: "K-beauty brands now hold 51% of Amazon AU top skincare — here's the $44M opportunity Australian brands are ignoring"</div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Trend + data + commercial implication. Three-part structure every time. Never the trend alone.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"L'Oréal just adopted Korean skincare formulation logic. When the world's biggest beauty company copies you — you've already won. Here's what that means for AU brands."</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — ready to write</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Sensitive skincare — fastest growing Amazon AU category</p><p class="topic-desc" style="color:#0369A1;">Completely unoccupied by local brands. A structural opportunity hiding in plain sight.</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">SPF — the next K-beauty battleground on Amazon AU</p><p class="topic-desc" style="color:#0369A1;">Bondi Sands, Ultra Violette, Naked Sundays — not on Amazon. Korean SPF brands taking the shelf.</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">L'Oréal is adopting Korean skincare formulation logic</p><p class="topic-desc" style="color:#0369A1;">When the biggest beauty company copies your playbook — commercial implications for AU brands</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">Fragrance-free, ingredient-led, dermatologist-backed</p><p class="topic-desc" style="color:#0369A1;">The 3 claims dominating Amazon AU beauty search right now — and how to own them</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">The clinical skincare opportunity on Amazon AU</p><p class="topic-desc" style="color:#0369A1;">CeraVe + LRP alone worth $65M. Both foreign. Zero Australian brand in the top 20.</p></div>
+        <div class="topic-card" style="background:#F0F9FF;"><p class="topic-title" style="color:#0369A1;">How TikTok beauty trends flow into Amazon AU sales</p><p class="topic-desc" style="color:#0369A1;">The lag between viral ingredient moment and BSR movement — and how to get ahead of it</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2a -->
+  <div id="panel-p2a" class="panel">
+    <div class="pillar-header" style="background:#0D1B2A;color:white;">
+      <div class="pillar-tag">Pillar 2a · Commercial strategy · Core differentiator</div>
+      <div class="pillar-title">Amazon AU mastery</div>
+      <div class="pillar-desc">Practitioner-level Amazon content. The questions Avène's digital marketing manager asked are the template. Insider knowledge nobody else in AU is sharing.</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#F97316;"></span><div><p class="persona-name">eComm & digital managers</p><p class="persona-sub">Actively running Amazon AU — your warmest leads</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#EF4444;"></span><div><p class="persona-name">Digital marketing managers</p><p class="persona-sub">Managing Amazon alongside other channels</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">Agency account managers</p><p class="persona-sub">Looking for AU-specific expertise</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Pain points it solves</div>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Our CVR% is terrible — what's wrong with our listing?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"We're only using SP — what are we missing in ads?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Amazon keeps discounting us below our RRP"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"We missed Beauty Page placement during Prime Day again"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Our rank never recovered after going out of stock"</span>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Contrarian take, framework, insider knowledge. Never generic advice. Always AU-specific. Always more specific than what anyone else is sharing.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"Most AU brands optimise their A+ content. Almost none optimise for the thing that actually moves CVR% on Amazon AU beauty. Here's what it is."</div>
+      </div>
+    </div>
+    <div class="card" style="border-color:#FCD34D;">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — from Avène's playbook and beyond</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">PDP content beyond A+ and video</p><p class="topic-desc" style="color:#92400E;">The 3 specific elements that move CVR% on Amazon AU beauty — and why most brands miss all three</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">Advertising beyond SP, SD and SB</p><p class="topic-desc" style="color:#92400E;">DSP, AMC audiences, video, Streaming TV — what AU beauty brands systematically ignore and what it costs them</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">Pricing on a discounted market</p><p class="topic-desc" style="color:#92400E;">How to protect brand price on Amazon AU when competitors race to the bottom</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">Beauty Page placements during Prime Day and EOFY</p><p class="topic-desc" style="color:#92400E;">How to get visibility — what the selection criteria actually are and when to submit</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">GEO and SEO for Amazon AU listings in 2026</p><p class="topic-desc" style="color:#92400E;">How AI search is changing product discovery — what to optimise for before everyone catches up</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">The review velocity playbook</p><p class="topic-desc" style="color:#92400E;">How to build 50+ reviews before launch without violating Amazon's terms of service</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">What Amazon's algorithm rewards in the first 90 days</p><p class="topic-desc" style="color:#92400E;">The launch window most brands waste — and why it defines your trajectory for 12 months</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">Keyword architecture for Amazon AU beauty</p><p class="topic-desc" style="color:#92400E;">How AU search behaviour differs from US and UK — and why US keyword tools mislead AU brands</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">Asset refresh strategy</p><p class="topic-desc" style="color:#92400E;">When to change your main image, title and bullets — and how to test without destroying rank</p></div>
+        <div class="topic-card" style="background:#FFFBEB;border:1px solid #FCD34D;"><p class="topic-title" style="color:#92400E;">How to read Amazon Brand Analytics</p><p class="topic-desc" style="color:#92400E;">What the numbers are actually telling you — and which metrics are vanity vs real signal</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2b -->
+  <div id="panel-p2b" class="panel">
+    <div class="pillar-header" style="background:#0D1B2A;color:white;">
+      <div class="pillar-tag">Pillar 2b · Commercial strategy</div>
+      <div class="pillar-title">Channel architecture</div>
+      <div class="pillar-desc">How brands should structure their full channel mix — Amazon not in isolation but as part of a coherent commercial system. Margin, conflict, pricing coherence.</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">Founders & CEOs</p><p class="persona-sub">Making channel investment decisions</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#8B5CF6;"></span><div><p class="persona-name">CMOs & commercial directors</p><p class="persona-sub">Balancing retailer relationships and DTC</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#10B981;"></span><div><p class="persona-name">CFOs & finance directors</p><p class="persona-sub">Comparing channel economics and margin</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Pain points it solves</div>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Will Amazon cheapen our brand with Chemist Warehouse?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Which channel actually makes us the most money?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Should we do DTC first or Amazon first?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Amazon discounted us and now CW wants price parity"</span>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Margin comparisons, decision frameworks, conflict case studies. Senior voice — this is board-level content.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"Most AU beauty brands have a pricing architecture problem. They don't know it — until Amazon exposes it within two weeks of launch."</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — ready to write</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#F0F4FF;"><p class="topic-title" style="color:#3730A3;">The channel margin map</p><p class="topic-desc" style="color:#3730A3;">DTC 65–72% gross vs Amazon 50–60% vs Mecca 25–30% net vs CW 35–45% — which channel actually makes money after everything</p></div>
+        <div class="topic-card" style="background:#F0F4FF;"><p class="topic-title" style="color:#3730A3;">How to launch on Amazon without destroying your CW relationship</p><p class="topic-desc" style="color:#3730A3;">The pricing discipline that protects both — and what happens when you get it wrong</p></div>
+        <div class="topic-card" style="background:#F0F4FF;"><p class="topic-title" style="color:#3730A3;">DTC first then Amazon — or Amazon first then DTC?</p><p class="topic-desc" style="color:#3730A3;">The sequencing decision most AU beauty brands get wrong — and what the data says</p></div>
+        <div class="topic-card" style="background:#F0F4FF;"><p class="topic-title" style="color:#3730A3;">3P vs hybrid model for AU beauty brands</p><p class="topic-desc" style="color:#3730A3;">The decision framework — what each costs, what each gives you, when each makes sense</p></div>
+        <div class="topic-card" style="background:#F0F4FF;"><p class="topic-title" style="color:#3730A3;">How channel conflict actually plays out</p><p class="topic-desc" style="color:#3730A3;">What happens when CW discounts below your Amazon price — and how to prevent it from day one</p></div>
+        <div class="topic-card" style="background:#F0F4FF;"><p class="topic-title" style="color:#3730A3;">Your retailer is now your competitor</p><p class="topic-desc" style="color:#3730A3;">Mecca, CW, Amazon building private label — the strategic response every brand needs now</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2c -->
+  <div id="panel-p2c" class="panel">
+    <div class="pillar-header" style="background:#0D1B2A;color:white;">
+      <div class="pillar-tag">Pillar 2c · Commercial strategy</div>
+      <div class="pillar-title">Brand & commercial decisions</div>
+      <div class="pillar-desc">The strategic layer above channels. Senior advisory voice. Content a CEO or board finds useful — not just an eComm manager.</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">CEOs & founders</p><p class="persona-sub">Making build vs buy vs partner decisions</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#F59E0B;"></span><div><p class="persona-name">Board members & investors</p><p class="persona-sub">Evaluating eCommerce strategy at portfolio level</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#10B981;"></span><div><p class="persona-name">Industry bodies like Accord</p><p class="persona-sub">Speaking and presentation opportunities</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Pain points it solves</div>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Should a brand our size even be on Amazon?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Do we hire internally or use an agency?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"How do we know if our agency is actually good?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"What should we ask for in our next AVN?"</span>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Senior advisory voice. Honest, direct assessments. Decision frameworks. No fluff. The kind of content you'd only get in a paid consulting session.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"Should a $5M AU beauty brand be on Amazon? The honest answer — with the numbers — is more nuanced than yes or no."</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — ready to write</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#F5F3FF;"><p class="topic-title" style="color:#5B21B6;">Should a $5M AU beauty brand be on Amazon?</p><p class="topic-desc" style="color:#5B21B6;">The honest answer with the numbers — a framework for making the decision, not a yes or no</p></div>
+        <div class="topic-card" style="background:#F5F3FF;"><p class="topic-title" style="color:#5B21B6;">What a $20M brand does differently from a $5M brand on Amazon</p><p class="topic-desc" style="color:#5B21B6;">The strategic shifts at each revenue stage — and when to make them</p></div>
+        <div class="topic-card" style="background:#F5F3FF;"><p class="topic-title" style="color:#5B21B6;">How to brief an Amazon agency</p><p class="topic-desc" style="color:#5B21B6;">What to ask, what red flags to watch for, what good actually looks like in the AU market</p></div>
+        <div class="topic-card" style="background:#F5F3FF;"><p class="topic-title" style="color:#5B21B6;">Hire internally vs consultant vs agency</p><p class="topic-desc" style="color:#5B21B6;">The decision framework — what each costs, what each delivers, when each makes sense</p></div>
+        <div class="topic-card" style="background:#F5F3FF;"><p class="topic-title" style="color:#5B21B6;">Annual Vendor Negotiation strategy for 1P brands</p><p class="topic-desc" style="color:#5B21B6;">How to walk in prepared — what Amazon actually wants and how to negotiate from a position of strength</p></div>
+        <div class="topic-card" style="background:#F5F3FF;"><p class="topic-title" style="color:#5B21B6;">Brand protection on Amazon AU</p><p class="topic-desc" style="color:#5B21B6;">Unauthorised sellers, counterfeit products — what to do, in what order, before it becomes a crisis</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2d -->
+  <div id="panel-p2d" class="panel">
+    <div class="pillar-header" style="background:#0D1B2A;color:white;">
+      <div class="pillar-tag">Pillar 2d · Commercial strategy · White space content</div>
+      <div class="pillar-title">Profitability, operations & growth</div>
+      <div class="pillar-desc">The most underserved content in AU eCommerce. Nobody is writing about Amazon AU unit economics with real AU data. This is your white space.</div>
+    </div>
+    <div class="card-grid-3">
+      <div class="card">
+        <div class="meta-label">Who it attracts</div>
+        <div class="persona-row"><span class="dot" style="background:#10B981;"></span><div><p class="persona-name">CFOs & finance directors</p><p class="persona-sub">Modelling Amazon AU before committing</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#F97316;"></span><div><p class="persona-name">eComm managers with P&L</p><p class="persona-sub">Accountable for channel profitability</p></div></div>
+        <div class="persona-row"><span class="dot" style="background:#3B82F6;"></span><div><p class="persona-name">Operations directors</p><p class="persona-sub">Managing FBA, inventory, supply chain</p></div></div>
+      </div>
+      <div class="card">
+        <div class="meta-label">Pain points it solves</div>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"What does $1 of Amazon AU revenue actually cost us?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"Our ACOS is 35% — is that good or bad for beauty?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"We went out of stock and our rank collapsed — why?"</span>
+        <span class="pain-tag" style="background:#FEE2E2;color:#991B1B;">"How do we scale revenue without scaling ad spend?"</span>
+      </div>
+      <div class="card">
+        <div class="meta-label">Format & hook</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Format</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Financial models, benchmark data, operational frameworks. Specific AU numbers wherever possible. The CFO has almost zero AU-specific content available — this fills the gap completely.</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;">Hook formula</div>
+        <div class="hook-box">"A typical AU beauty brand selling $500K/year on Amazon AU spends $87K of that on fees alone before advertising. Here's exactly where it goes."</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="meta-label" style="margin-bottom:12px;">Topic bank — ready to write</div>
+      <div class="topic-grid">
+        <div class="topic-card" style="background:#F0FDF4;"><p class="topic-title" style="color:#166534;">The real cost of selling on Amazon AU</p><p class="topic-desc" style="color:#166534;">Referral fees, FBA, storage, returns, advertising — what $1 of beauty revenue actually costs you</p></div>
+        <div class="topic-card" style="background:#F0FDF4;"><p class="topic-title" style="color:#166534;">Amazon AU profitability benchmarks for beauty</p><p class="topic-desc" style="color:#166534;">What a healthy ACOS looks like, what TACoS should be, when you're overspending on ads</p></div>
+        <div class="topic-card" style="background:#F0FDF4;"><p class="topic-title" style="color:#166534;">The stockout tax</p><p class="topic-desc" style="color:#166534;">What going out of stock in your first 90 days costs in rank — and how long the recovery actually takes</p></div>
+        <div class="topic-card" style="background:#F0FDF4;"><p class="topic-title" style="color:#166534;">FBA vs FBM for AU beauty brands</p><p class="topic-desc" style="color:#166534;">When each makes sense and what the real cost difference is for a brand launching on Amazon AU</p></div>
+        <div class="topic-card" style="background:#F0FDF4;"><p class="topic-title" style="color:#166534;">Inventory planning for Amazon AU</p><p class="topic-desc" style="color:#166534;">How to size your first FBA shipment, set reorder points and survive your first Prime Day</p></div>
+        <div class="topic-card" style="background:#F0FDF4;"><p class="topic-title" style="color:#166534;">From $100K to $1M on Amazon AU</p><p class="topic-desc" style="color:#166534;">What changes at each revenue stage — the growth model for AU beauty brands that actually works</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>

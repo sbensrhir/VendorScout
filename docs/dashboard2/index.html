@@ -248,11 +248,16 @@
   </div>
 
   <!-- Period toggle -->
-  <div style="display:flex;gap:8px;margin-bottom:1.5rem;align-items:center;">
-    <span style="font-size:13px;color:var(--muted);font-weight:500;">View:</span>
-    <button class="btn-sm period-btn active" onclick="setPeriod('all',this)">All time</button>
-    <button class="btn-sm period-btn" onclick="setPeriod('month',this)">This month</button>
-    <button class="btn-sm period-btn" onclick="setPeriod('quarter',this)">This quarter</button>
+  <div style="display:flex;gap:8px;margin-bottom:1.5rem;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:13px;color:var(--muted);font-weight:500;">View:</span>
+      <button class="btn-sm period-btn active" onclick="setPeriod('all',this)">All time</button>
+      <button class="btn-sm period-btn" onclick="setPeriod('month',this)">This month</button>
+      <button class="btn-sm period-btn" onclick="setPeriod('quarter',this)">This quarter</button>
+    </div>
+    <a href="../content-strategy/" target="_blank" style="display:flex;align-items:center;gap:6px;background:var(--navy);color:var(--gold);text-decoration:none;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;">
+      📋 Content Strategy ↗
+    </a>
   </div>
 
   <div class="grid-2">
