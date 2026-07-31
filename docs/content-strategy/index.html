@@ -115,17 +115,35 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 <div class="main">
 
   <!-- Tabs -->
-  <div class="tab-row">
-    <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
-    <button class="tab" onclick="switchTab('upcoming',this)">📅 Upcoming</button>
-    <button class="tab" onclick="switchTab('sequence',this)">🗂 Sequence</button>
-    <button class="tab" onclick="switchTab('p1a',this)" title="1a · Retail landscape">🏪 Retail</button>
-    <button class="tab" onclick="switchTab('p1b',this)" title="1b · Brand performance">📊 Brands</button>
-    <button class="tab" onclick="switchTab('p1c',this)" title="1c · Category trends">📈 Trends</button>
-    <button class="tab" onclick="switchTab('p2a',this)" title="2a · Amazon mastery">🎯 Amazon</button>
-    <button class="tab" onclick="switchTab('p2b',this)" title="2b · Channel architecture">🔀 Channels</button>
-    <button class="tab" onclick="switchTab('p2c',this)" title="2c · Brand decisions">🧠 Strategy</button>
-    <button class="tab" onclick="switchTab('p2d',this)" title="2d · Profitability & ops">💰 Profit & Ops</button>
+  <div style="border-bottom:1px solid var(--border);margin-bottom:2rem;overflow-x:auto;">
+    <!-- Row 1: pillar group labels -->
+    <div style="display:flex;padding-left:0;">
+      <div style="display:flex;gap:4px;">
+        <!-- empty spacer for Overview + Upcoming + Sequence -->
+        <div style="padding:0 18px;visibility:hidden;font-size:13px;">Overview</div>
+        <div style="padding:0 18px;visibility:hidden;font-size:13px;">📅 Upcoming</div>
+        <div style="padding:0 18px;visibility:hidden;font-size:13px;">🗂 Sequence</div>
+      </div>
+      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
+      <div style="flex:3;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--blue);padding:4px 0 0;">Pillar 1 · Market intelligence</div>
+      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
+      <div style="flex:4;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gold);padding:4px 0 0;">Pillar 2 · Commercial strategy</div>
+    </div>
+    <!-- Row 2: actual tabs -->
+    <div style="display:flex;gap:0;">
+      <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+      <button class="tab" onclick="switchTab('upcoming',this)">📅 Upcoming</button>
+      <button class="tab" onclick="switchTab('sequence',this)">🗂 Sequence</button>
+      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
+      <button class="tab" onclick="switchTab('p1a',this)" title="1a · Retail landscape">🏪 Retail</button>
+      <button class="tab" onclick="switchTab('p1b',this)" title="1b · Brand performance">📊 Brands</button>
+      <button class="tab" onclick="switchTab('p1c',this)" title="1c · Category trends">📈 Trends</button>
+      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
+      <button class="tab" onclick="switchTab('p2a',this)" title="2a · Amazon mastery">🎯 Amazon</button>
+      <button class="tab" onclick="switchTab('p2b',this)" title="2b · Channel architecture">🔀 Channels</button>
+      <button class="tab" onclick="switchTab('p2c',this)" title="2c · Brand decisions">🧠 Strategy</button>
+      <button class="tab" onclick="switchTab('p2d',this)" title="2d · Profitability & ops">💰 Profit & Ops</button>
+    </div>
   </div>
 
   <!-- OVERVIEW -->
@@ -148,15 +166,15 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
         <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;">What's happening in AU beauty and eCommerce</div>
         <div style="font-size:12px;color:var(--text);margin-bottom:1rem;font-style:italic;">Goal: Build authority. Make founders and CMOs think "she knows my market better than I do."</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
-          <div onclick="switchTab('p1a',document.querySelectorAll('.tab')[3])" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
+          <div onclick="switchTab('p1a')" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
             <div style="font-size:12px;font-weight:600;">🏪 1a — Retail landscape</div>
             <div style="font-size:11px;color:var(--muted);">Who owns the shelf, how power is shifting</div>
           </div>
-          <div onclick="switchTab('p1b',document.querySelectorAll('.tab')[4])" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
+          <div onclick="switchTab('p1b')" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
             <div style="font-size:12px;font-weight:600;">📊 1b — Brand performance</div>
             <div style="font-size:11px;color:var(--muted);">Which brands win where — proprietary data</div>
           </div>
-          <div onclick="switchTab('p1c',document.querySelectorAll('.tab')[5])" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
+          <div onclick="switchTab('p1c')" style="background:var(--bg);border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid transparent;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='transparent'">
             <div style="font-size:12px;font-weight:600;">📈 1c — Category trends</div>
             <div style="font-size:11px;color:var(--muted);">Trends anchored to commercial implications only</div>
           </div>
@@ -170,19 +188,19 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
         <div style="font-size:13px;color:var(--muted);margin-bottom:1rem;">What brands should do about it</div>
         <div style="font-size:12px;color:var(--text);margin-bottom:1rem;font-style:italic;">Goal: Convert authority into clients. Make eComm directors think "I need her on my team."</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
-          <div onclick="switchTab('p2a',document.querySelectorAll('.tab')[6])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
+          <div onclick="switchTab('p2a')" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
             <div style="font-size:12px;font-weight:600;">🎯 2a — Amazon AU mastery</div>
             <div style="font-size:11px;color:var(--muted);">PDP, ads, pricing, Beauty Page, GEO/SEO — practitioner level</div>
           </div>
-          <div onclick="switchTab('p2b',document.querySelectorAll('.tab')[7])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
+          <div onclick="switchTab('p2b')" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
             <div style="font-size:12px;font-weight:600;">🔀 2b — Channel architecture</div>
             <div style="font-size:11px;color:var(--muted);">DTC vs Amazon vs retail as a system — margin, conflict</div>
           </div>
-          <div onclick="switchTab('p2c',document.querySelectorAll('.tab')[8])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
+          <div onclick="switchTab('p2c')" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
             <div style="font-size:12px;font-weight:600;">🧠 2c — Brand & commercial decisions</div>
             <div style="font-size:11px;color:var(--muted);">Senior advisory layer — strategy, AVN, capability</div>
           </div>
-          <div onclick="switchTab('p2d',document.querySelectorAll('.tab')[9])" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
+          <div onclick="switchTab('p2d')" style="background:#FFFBEB;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid #FCD34D;">
             <div style="font-size:12px;font-weight:600;">💰 2d — Profitability, operations & growth</div>
             <div style="font-size:11px;color:var(--muted);">Unit economics, FBA, P&L — white space content</div>
           </div>
@@ -543,8 +561,19 @@ function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function switchTab(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  if(btn) btn.classList.add('active');
+  const panel = document.getElementById('panel-' + name);
+  if(panel) panel.classList.add('active');
+  // Highlight correct tab button
+  if(btn) {
+    btn.classList.add('active');
+  } else {
+    // Find by onclick attribute
+    document.querySelectorAll('.tab').forEach(t => {
+      if(t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + name + "'")) {
+        t.classList.add('active');
+      }
+    });
+  }
   if(['p1a','p1b','p1c','p2a','p2b','p2c','p2d'].includes(name)) renderSubPillar(name);
 }
 
