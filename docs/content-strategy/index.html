@@ -116,33 +116,45 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 
   <!-- Tabs -->
   <div style="border-bottom:1px solid var(--border);margin-bottom:2rem;overflow-x:auto;">
-    <!-- Row 1: pillar group labels -->
-    <div style="display:flex;padding-left:0;">
-      <div style="display:flex;gap:4px;">
-        <!-- empty spacer for Overview + Upcoming + Sequence -->
-        <div style="padding:0 18px;visibility:hidden;font-size:13px;">Overview</div>
-        <div style="padding:0 18px;visibility:hidden;font-size:13px;">📅 Upcoming</div>
-        <div style="padding:0 18px;visibility:hidden;font-size:13px;">🗂 Sequence</div>
+    <div style="display:flex;align-items:flex-end;min-width:max-content;">
+
+      <!-- Standalone tabs -->
+      <div style="display:flex;flex-direction:column;">
+        <div style="height:18px;"></div><!-- spacer to match label row height -->
+        <div style="display:flex;">
+          <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+          <button class="tab" onclick="switchTab('upcoming',this)">📅 Upcoming</button>
+          <button class="tab" onclick="switchTab('sequence',this)">🗂 Sequence</button>
+        </div>
       </div>
-      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
-      <div style="flex:3;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--blue);padding:4px 0 0;">Pillar 1 · Market intelligence</div>
-      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
-      <div style="flex:4;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gold);padding:4px 0 0;">Pillar 2 · Commercial strategy</div>
-    </div>
-    <!-- Row 2: actual tabs -->
-    <div style="display:flex;gap:0;">
-      <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
-      <button class="tab" onclick="switchTab('upcoming',this)">📅 Upcoming</button>
-      <button class="tab" onclick="switchTab('sequence',this)">🗂 Sequence</button>
-      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
-      <button class="tab" onclick="switchTab('p1a',this)" title="1a · Retail landscape">🏪 Retail</button>
-      <button class="tab" onclick="switchTab('p1b',this)" title="1b · Brand performance">📊 Brands</button>
-      <button class="tab" onclick="switchTab('p1c',this)" title="1c · Category trends">📈 Trends</button>
-      <div style="width:1px;background:var(--border);margin:4px 0;"></div>
-      <button class="tab" onclick="switchTab('p2a',this)" title="2a · Amazon mastery">🎯 Amazon</button>
-      <button class="tab" onclick="switchTab('p2b',this)" title="2b · Channel architecture">🔀 Channels</button>
-      <button class="tab" onclick="switchTab('p2c',this)" title="2c · Brand decisions">🧠 Strategy</button>
-      <button class="tab" onclick="switchTab('p2d',this)" title="2d · Profitability & ops">💰 Profit & Ops</button>
+
+      <!-- Divider -->
+      <div style="width:1px;background:var(--border);height:42px;margin:0 2px;"></div>
+
+      <!-- Pillar 1 group -->
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--blue);text-align:center;padding:4px 0 2px;border-top:2px solid var(--blue);margin:0 2px;">Pillar 1 · Market intelligence</div>
+        <div style="display:flex;">
+          <button class="tab" onclick="switchTab('p1a',this)" title="1a · Retail landscape">🏪 Retail</button>
+          <button class="tab" onclick="switchTab('p1b',this)" title="1b · Brand performance">📊 Brands</button>
+          <button class="tab" onclick="switchTab('p1c',this)" title="1c · Category trends">📈 Trends</button>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div style="width:1px;background:var(--border);height:42px;margin:0 2px;"></div>
+
+      <!-- Pillar 2 group -->
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gold);text-align:center;padding:4px 0 2px;border-top:2px solid var(--gold);margin:0 2px;">Pillar 2 · Commercial strategy</div>
+        <div style="display:flex;">
+          <button class="tab" onclick="switchTab('p2a',this)" title="2a · Amazon mastery">🎯 Amazon</button>
+          <button class="tab" onclick="switchTab('p2b',this)" title="2b · Channel architecture">🔀 Channels</button>
+          <button class="tab" onclick="switchTab('p2c',this)" title="2c · Brand decisions">🧠 Strategy</button>
+          <button class="tab" onclick="switchTab('p2d',this)" title="2d · Profitability & ops">💰 Profit & Ops</button>
+        </div>
+      </div>
+
     </div>
   </div>
 
