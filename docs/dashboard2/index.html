@@ -96,6 +96,16 @@
   input:checked + .toggle-slider { background:var(--green); }
   input:checked + .toggle-slider:before { transform:translateX(16px); }
   .period-btn.active { background:var(--navy); color:white; border-color:var(--navy); }
+  .task-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); cursor:default; }
+  .task-item:last-child { border-bottom:none; }
+  .task-item.dragging { opacity:0.4; }
+  .task-item.drag-over { border-top:2px solid var(--gold); }
+  .drag-handle { color:var(--muted); cursor:grab; font-size:14px; flex-shrink:0; user-select:none; }
+  .drag-handle:active { cursor:grabbing; }
+  .priority-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; cursor:pointer; }
+  .priority-high { background:#E63946; }
+  .priority-med { background:#E9C46A; }
+  .priority-none { background:#E2E8F0; }
 </style>
 </head>
 <body>
@@ -174,8 +184,8 @@
           <button class="btn-sm" onclick="resetWeek()">Reset</button>
         </div>
       </div>
-      <!-- WBR commitments surfaced as priorities -->
-      <div id="wbr-commitments-home" style="display:none;margin-bottom:10px;"></div>
+      <!-- WBR commitments surfaced as priorities — always first -->
+      <div id="wbr-commitments-home" style="display:none;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:8px 12px;margin-bottom:10px;"></div>
       <div id="tasks-list"><div class="loading">Loading...</div></div>
       <div id="add-task-form" style="display:none;margin-top:12px;">
         <div style="display:flex;gap:8px;margin-top:8px;">
@@ -855,14 +865,28 @@ function renderWBRCommitmentsHome() {
     const commitments = [data.commitment_1, data.commitment_2, data.commitment_3].filter(Boolean);
     if(commitments.length === 0) { el.style.display='none'; return; }
     el.style.display = 'block';
-    el.innerHTML = `<div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
-      <div style="font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🎯 This week's WBR commitments</div>
-      ${commitments.map(c=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-        <span style="color:#F59E0B;">→</span>
-        <span style="font-size:13px;color:#92400E;">${c}</span>
-      </div>`).join('')}
-    </div>`;
+    el.innerHTML = `
+      <div style="border-bottom:1px solid #FCD34D;padding-bottom:6px;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.5px;">🎯 From your WBR</span>
+        <span style="font-size:10px;color:#B45309;background:#FEF3C7;padding:1px 6px;border-radius:20px;">Priority</span>
+      </div>
+      ${commitments.map((c,i) => {
+        const savedKey = `wbr_commit_done_${weekStart()}_${i}`;
+        const done = D.settings[savedKey] === 'true';
+        return `<div class="task-item" style="padding:7px 0;">
+          <span class="priority-dot priority-high" title="WBR commitment — high priority"></span>
+          <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleWBRCommitment(${i},this.checked,'${savedKey}')">
+          <span class="task-label ${done?'done':''}" style="flex:1;">${c}</span>
+          <span class="task-day" style="background:#FEF3C7;color:#92400E;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;">WBR</span>
+        </div>`;
+      }).join('')}`;
   });
+}
+
+async function toggleWBRCommitment(idx, checked, key) {
+  await sb.from('dashboard_settings').upsert({key, value:checked.toString()}, {onConflict:'key'});
+  D.settings[key] = checked.toString();
+  renderWBRCommitmentsHome();
 }
 
 let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{}, training:[], certs:[] };
@@ -1083,43 +1107,54 @@ async function addCustomTask() {
 }
 
 function renderTasks() {
-  // Apply any name/day overrides saved in settings
   const getTaskName = (t) => D.settings[`task_name_${t.id}`] || t.name;
   const getTaskDay = (t) => D.settings[`task_day_${t.id}`] || t.day;
+  const getTaskPriority = (id) => D.settings[`task_priority_${id}`] || 'none';
+  const isDeleted = (id) => D.settings[`task_deleted_${id}`] === 'true';
 
   const customTasks = D.tasks.filter(t => t.task_id && t.task_id.startsWith('custom-'));
 
-  const defaultItems = TASKS.map(t => {
+  // Default tasks — skip deleted ones
+  const defaultItems = TASKS.filter(t => !isDeleted(t.id)).map(t => {
     const rec = D.tasks.find(r => r.task_id === t.id);
     const done = rec?.completed || false;
     const name = getTaskName(t);
     const day = getTaskDay(t);
-    return `<div class="task-item">
+    const priority = getTaskPriority(t.id);
+    return `<div class="task-item" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropTask(event)">
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <span class="priority-dot priority-${priority}" title="Click to set priority" onclick="cyclePriority('${t.id}',true)"></span>
       <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
-      <span class="task-label ${done?'done':''}">${name}</span>
+      <span class="task-label ${done?'done':''}" style="flex:1;">${name}</span>
       <span class="task-day">${day}</span>
-      ${taskEditMode ? `<button onclick="openEditTask('${t.id}','${name.replace(/'/g,"\\'")}','${day}',true)" style="background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:11px;padding:1px 6px;">Edit</button>` : ''}
+      ${taskEditMode ? `
+        <button onclick="openEditTask('${t.id}','${name.replace(/'/g,"\\'")}','${day}',true)" style="background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:11px;padding:1px 6px;">Edit</button>
+        <button onclick="deleteDefaultTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0 4px;" title="Remove">✕</button>
+      ` : ''}
     </div>`;
   }).join('');
 
   const customItems = customTasks.map(t => {
     const done = t.completed || false;
-    return `<div class="task-item">
+    const priority = getTaskPriority(t.id);
+    return `<div class="task-item" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="dropTask(event)">
+      <span class="drag-handle" title="Drag to reorder">⠿</span>
+      <span class="priority-dot priority-${priority}" title="Click to set priority" onclick="cyclePriority('${t.id}',false)"></span>
       <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.task_id}',this.checked,'${t.id}')">
-      <span class="task-label ${done?'done':''}">${t.task_name}</span>
+      <span class="task-label ${done?'done':''}" style="flex:1;">${t.task_name}</span>
       <span class="task-day">${t.task_day||''}</span>
-      ${taskEditMode
-        ? `<button onclick="openEditTask('${t.id}','${(t.task_name||'').replace(/'/g,"\\'")}','${t.task_day||''}',false)" style="background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:11px;padding:1px 6px;">Edit</button>
-           <button onclick="deleteCustomTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0 4px;">✕</button>`
-        : `<button onclick="deleteCustomTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:0 4px;" title="Remove task">✕</button>`
-      }
+      ${taskEditMode ? `
+        <button onclick="openEditTask('${t.id}','${(t.task_name||'').replace(/'/g,"\\'")}','${t.task_day||''}',false)" style="background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:11px;padding:1px 6px;">Edit</button>
+        <button onclick="deleteCustomTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0 4px;">✕</button>
+      ` : `<button onclick="deleteCustomTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;padding:0 4px;" title="Remove">✕</button>`}
     </div>`;
   }).join('');
 
   document.getElementById('tasks-list').innerHTML = defaultItems + customItems;
 
-  const totalTasks = TASKS.length + customTasks.length;
-  const completedDefault = D.tasks.filter(t => !t.task_id?.startsWith('custom-') && t.completed).length;
+  const visibleDefaults = TASKS.filter(t => !isDeleted(t.id)).length;
+  const totalTasks = visibleDefaults + customTasks.length;
+  const completedDefault = TASKS.filter(t => !isDeleted(t.id)).filter(t => D.tasks.find(r => r.task_id === t.id && r.completed)).length;
   const completedCustom = customTasks.filter(t => t.completed).length;
   const done = completedDefault + completedCustom;
 
@@ -1128,8 +1163,43 @@ function renderTasks() {
   document.getElementById('kpi-score').textContent = done + '/' + totalTasks;
   document.getElementById('kpi-score-bar').style.width = pct(done, totalTasks) + '%';
 
-  // Surface WBR commitments
   renderWBRCommitmentsHome();
+}
+
+async function deleteDefaultTask(taskId) {
+  if(!confirm('Remove this task from your weekly list?')) return;
+  await sb.from('dashboard_settings').upsert({key:`task_deleted_${taskId}`, value:'true'}, {onConflict:'key'});
+  D.settings[`task_deleted_${taskId}`] = 'true';
+  renderTasks();
+}
+
+async function cyclePriority(taskId, isDefault) {
+  const key = `task_priority_${taskId}`;
+  const current = D.settings[key] || 'none';
+  const next = current === 'none' ? 'med' : current === 'med' ? 'high' : 'none';
+  await sb.from('dashboard_settings').upsert({key, value:next}, {onConflict:'key'});
+  D.settings[key] = next;
+  renderTasks();
+}
+
+// Drag and drop
+let dragSrcId = null;
+function dragStart(e) { dragSrcId = e.currentTarget.dataset.id; e.currentTarget.classList.add('dragging'); }
+function dragOver(e) { e.preventDefault(); document.querySelectorAll('.task-item').forEach(el => el.classList.remove('drag-over')); e.currentTarget.classList.add('drag-over'); }
+function dropTask(e) {
+  e.preventDefault();
+  const targetId = e.currentTarget.dataset.id;
+  document.querySelectorAll('.task-item').forEach(el => el.classList.remove('dragging','drag-over'));
+  if(dragSrcId === targetId) return;
+  // Save order to settings
+  const items = [...document.querySelectorAll('.task-item')].map(el => el.dataset.id);
+  const fromIdx = items.indexOf(dragSrcId);
+  const toIdx = items.indexOf(targetId);
+  items.splice(fromIdx, 1);
+  items.splice(toIdx, 0, dragSrcId);
+  sb.from('dashboard_settings').upsert({key:'task_order', value:JSON.stringify(items)}, {onConflict:'key'});
+  D.settings['task_order'] = JSON.stringify(items);
+  renderTasks();
 }
 
 async function toggleTask(taskId, checked, dbId) {
