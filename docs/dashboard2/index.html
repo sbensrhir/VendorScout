@@ -977,15 +977,28 @@ async function loadAll() {
     (st.data||[]).forEach(r=>D.settings[r.key]=r.value);
   } catch(e) { console.warn('Core tables error:', e); }
 
+  // Always load current week's WBR commitments into settings for Home tab
+  try {
+    const {data} = await sb.from('weekly_bridge')
+      .select('commitment_1,commitment_2,commitment_3')
+      .eq('week_start', weekStart())
+      .maybeSingle();
+    if(data) {
+      D.settings['wbr_c1_current'] = data.commitment_1 || '';
+      D.settings['wbr_c2_current'] = data.commitment_2 || '';
+      D.settings['wbr_c3_current'] = data.commitment_3 || '';
+    }
+  } catch(e) { console.warn('WBR load error:', e); }
+
   try {
     const tr = await sb.from('training_resources').select('*').order('created_at',{ascending:false});
     D.training = tr.data||[];
-  } catch(e) { D.training = []; console.warn('training_resources missing'); }
+  } catch(e) { D.training = []; }
 
   try {
     const ce = await sb.from('certifications').select('*').order('date_earned',{ascending:false});
     D.certs = ce.data||[];
-  } catch(e) { D.certs = []; console.warn('certifications missing'); }
+  } catch(e) { D.certs = []; }
 
   renderAll();
 }
@@ -1748,7 +1761,7 @@ async function initWBR() {
   wbrCurrentWeek = weekStart();
   const filter = document.getElementById('wbr-week-filter');
   if(filter) {
-    filter.innerHTML = '<option value="">Current week</option>';
+    filter.innerHTML = '<option value="">This week</option>';
     for(let i=1; i<=12; i++) {
       const d = new Date(wbrCurrentWeek);
       d.setDate(d.getDate() - (i*7));
@@ -1758,8 +1771,9 @@ async function initWBR() {
       opt.textContent = `W${getISOWeek(d)} — ${d.toLocaleDateString('en-AU',{month:'short',day:'numeric'})}`;
       filter.appendChild(opt);
     }
+    filter.value = ''; // always reset to current week
   }
-  document.getElementById('wbr-title').textContent = getWeekLabel(wbrCurrentWeek);
+  document.getElementById('wbr-title').textContent = getWeekLabel(wbrCurrentWeek) + ' — Current';
   await loadWBR();
   await loadWBRHistory();
 }
@@ -1768,7 +1782,7 @@ async function loadWBR() {
   const filterVal = document.getElementById('wbr-week-filter')?.value;
   const week = filterVal || wbrCurrentWeek;
   const isCurrentWeek = !filterVal;
-  document.getElementById('wbr-title').textContent = getWeekLabel(week);
+  document.getElementById('wbr-title').textContent = isCurrentWeek ? getWeekLabel(wbrCurrentWeek) + ' — Current' : getWeekLabel(new Date(week));
   const { data } = await sb.from('weekly_bridge').select('*').eq('week_start', week).maybeSingle();
   wbrData = data || {};
   renderWBRMetrics(week, isCurrentWeek);
@@ -1904,10 +1918,10 @@ async function saveWBR() {
 }
 
 async function loadWBRHistory() {
-  const { data } = await sb.from('weekly_bridge').select('*').order('week_start',{ascending:false}).limit(12);
+  const { data } = await sb.from('weekly_bridge').select('*').lt('week_start', weekStart()).order('week_start',{ascending:false}).limit(12);
   const el = document.getElementById('wbr-history');
   if(!el) return;
-  if(!data||data.length===0){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:1rem 0;">No WBR history yet — complete your first one above.</div>';return;}
+  if(!data||data.length===0){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:1rem 0;">No past WBRs yet — your completed weeks appear here every Monday.</div>';return;}
   el.innerHTML = data.map(r => {
     const metrics = r.metrics ? JSON.parse(r.metrics) : {};
     const onTrack = Object.values(metrics).filter(m=>m.status==='on-track').length;
