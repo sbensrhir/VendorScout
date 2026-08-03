@@ -877,7 +877,7 @@ function renderWBRCommitmentsHome() {
       <span style="font-size:10px;color:#B45309;background:#FEF3C7;padding:1px 6px;border-radius:20px;">Priority</span>
     </div>
     ${commitments.map((c,i) => {
-      const savedKey = `wbr_commit_done_${weekStart()}_${i}`;
+      const savedKey = `wbr_commit_done_${wbrWeekStart()}_${i}`;
       const done = D.settings[savedKey] === 'true';
       return `<div class="task-item" style="padding:7px 0;">
         <span class="priority-dot priority-high" title="WBR commitment — high priority"></span>
@@ -1741,8 +1741,19 @@ const STATUS_COLORS = {
   'n/a':      { bg:'#F1F5F9', text:'#64748B', label:'N/A' },
 };
 
-let wbrCurrentWeek = weekStart();
+let wbrCurrentWeek = wbrWeekStart();
 let wbrData = {};
+
+// WBR always reviews the PREVIOUS week
+function wbrWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  // Go back to last Monday (7 days before this Monday)
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1) - 7;
+  const mon = new Date(d);
+  mon.setDate(diff);
+  return mon.toISOString().split('T')[0];
+}
 
 function getISOWeek(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -1758,7 +1769,7 @@ function getWeekLabel(ws) {
 }
 
 async function initWBR() {
-  wbrCurrentWeek = weekStart();
+  wbrCurrentWeek = wbrWeekStart();
   const filter = document.getElementById('wbr-week-filter');
   if(filter) {
     filter.innerHTML = '<option value="">This week</option>';
@@ -1773,7 +1784,7 @@ async function initWBR() {
     }
     filter.value = ''; // always reset to current week
   }
-  document.getElementById('wbr-title').textContent = getWeekLabel(wbrCurrentWeek) + ' — Current';
+  document.getElementById('wbr-title').textContent = 'Reviewing ' + getWeekLabel(wbrCurrentWeek);
   await loadWBR();
   await loadWBRHistory();
 }
@@ -1782,7 +1793,7 @@ async function loadWBR() {
   const filterVal = document.getElementById('wbr-week-filter')?.value;
   const week = filterVal || wbrCurrentWeek;
   const isCurrentWeek = !filterVal;
-  document.getElementById('wbr-title').textContent = isCurrentWeek ? getWeekLabel(wbrCurrentWeek) + ' — Current' : getWeekLabel(new Date(week));
+  document.getElementById('wbr-title').textContent = isCurrentWeek ? 'Reviewing ' + getWeekLabel(wbrCurrentWeek) : getWeekLabel(new Date(week));
   const { data } = await sb.from('weekly_bridge').select('*').eq('week_start', week).maybeSingle();
   wbrData = data || {};
   renderWBRMetrics(week, isCurrentWeek);
@@ -1918,7 +1929,7 @@ async function saveWBR() {
 }
 
 async function loadWBRHistory() {
-  const { data } = await sb.from('weekly_bridge').select('*').lt('week_start', weekStart()).order('week_start',{ascending:false}).limit(12);
+  const { data } = await sb.from('weekly_bridge').select('*').lt('week_start', wbrWeekStart()).order('week_start',{ascending:false}).limit(12);
   const el = document.getElementById('wbr-history');
   if(!el) return;
   if(!data||data.length===0){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:1rem 0;">No past WBRs yet — your completed weeks appear here every Monday.</div>';return;}
