@@ -134,45 +134,77 @@
 <!-- HOME -->
 <div id="tab-home" class="page active">
 
-  <!-- GREETING BANNER -->
-  <div id="greeting-banner" style="border-radius:16px;padding:1.5rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;overflow:hidden;position:relative;">
-    <div style="position:relative;z-index:1;">
-      <div id="greeting-text" style="font-size:24px;font-weight:700;color:white;margin-bottom:4px;"></div>
-      <div id="greeting-sub" style="font-size:14px;color:rgba(255,255,255,0.75);"></div>
+  <!-- GREETING BANNER — large hero -->
+  <div id="greeting-banner" style="border-radius:20px;padding:2rem 2.5rem;margin-bottom:1.5rem;overflow:hidden;position:relative;min-height:160px;">
+    <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;">
+
+      <!-- Left: greeting + quote + action -->
+      <div style="flex:1;">
+        <div id="greeting-text"></div>
+      </div>
+
+      <!-- Right: time + weather + emoji -->
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;flex-shrink:0;">
+        <!-- Live clock -->
+        <div id="banner-clock" style="text-align:right;">
+          <div id="banner-time" style="font-size:36px;font-weight:700;color:white;letter-spacing:-1px;line-height:1;"></div>
+          <div id="banner-date" style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:2px;"></div>
+        </div>
+        <!-- Weather + emoji row -->
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div id="banner-weather" style="text-align:right;">
+            <div id="weather-temp" style="font-size:22px;font-weight:600;color:white;">—°</div>
+            <div id="weather-desc" style="font-size:12px;color:rgba(255,255,255,0.6);">Sydney</div>
+          </div>
+          <div id="greeting-emoji" style="font-size:64px;line-height:1;"></div>
+        </div>
+      </div>
+
     </div>
-    <div id="greeting-emoji" style="font-size:56px;position:relative;z-index:1;"></div>
-    <div id="greeting-bg-anim" style="position:absolute;inset:0;"></div>
+    <div id="greeting-bg-anim" style="position:absolute;inset:0;pointer-events:none;"></div>
   </div>
 
   <div id="alerts-bar" style="margin-bottom:1rem;display:none;"></div>
+
+  <!-- KPI GRID — enhanced -->
   <div class="kpi-grid">
-    <div class="kpi-card">
+    <div class="kpi-card" style="border-top:3px solid var(--green);">
       <div class="kpi-label">Monthly Revenue</div>
-      <div class="kpi-value" id="kpi-rev">$0</div>
+      <div class="kpi-value" id="kpi-rev" style="color:var(--navy);">$0</div>
       <div class="kpi-sub">Goal: $15,000 AUD</div>
-      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-rev-bar" style="background:var(--red);width:0%"></div></div>
+      <div class="kpi-bar" style="margin-top:10px;"><div class="kpi-bar-fill" id="kpi-rev-bar" style="background:var(--red);width:0%"></div></div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" style="border-top:3px solid var(--blue);">
       <div class="kpi-label">Active Clients</div>
-      <div class="kpi-value" id="kpi-clients">0</div>
+      <div class="kpi-value" id="kpi-clients" style="color:var(--navy);">0</div>
       <div class="kpi-sub">Goal: 4 clients</div>
-      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-clients-bar" style="background:var(--amber);width:0%"></div></div>
+      <div class="kpi-bar" style="margin-top:10px;"><div class="kpi-bar-fill" id="kpi-clients-bar" style="background:var(--amber);width:0%"></div></div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" style="border-top:3px solid var(--blue);">
       <div class="kpi-label">Newsletter Subscribers</div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <div class="kpi-value" id="kpi-subs">250</div>
+        <div class="kpi-value" id="kpi-subs" style="color:var(--navy);">250</div>
         <button class="btn-sm" onclick="quickUpdateSubs()" style="font-size:11px;padding:2px 8px;">Update</button>
       </div>
       <div class="kpi-sub">Goal: 1,000</div>
-      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-subs-bar" style="background:var(--blue);width:25%"></div></div>
+      <div class="kpi-bar" style="margin-top:10px;"><div class="kpi-bar-fill" id="kpi-subs-bar" style="background:var(--blue);width:25%"></div></div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" style="border-top:3px solid var(--gold);position:relative;">
       <div class="kpi-label">Week Score</div>
-      <div class="kpi-value" id="kpi-score">0/7</div>
-      <div class="kpi-sub">Non-negotiables done</div>
-      <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-score-bar" style="background:var(--green);width:0%"></div></div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div>
+          <div class="kpi-value" id="kpi-score" style="color:var(--navy);">0/7</div>
+          <div class="kpi-sub">Non-negotiables done</div>
+        </div>
+        <!-- Circular progress ring -->
+        <svg width="52" height="52" style="flex-shrink:0;transform:rotate(-90deg);">
+          <circle cx="26" cy="26" r="20" fill="none" stroke="#E2E8F0" stroke-width="5"/>
+          <circle id="score-ring" cx="26" cy="26" r="20" fill="none" stroke="var(--gold)" stroke-width="5" stroke-linecap="round"
+            stroke-dasharray="125.6" stroke-dashoffset="125.6" style="transition:stroke-dashoffset 0.6s ease;"/>
+        </svg>
+      </div>
     </div>
+  </div>
   </div>
   <div class="grid-2">
     <div class="card">
@@ -938,8 +970,6 @@ const weekStart = () => { const d=new Date(),day=d.getDay(),diff=d.getDate()-day
 const badge = (s,cls,extra='') => `<span class="badge ${cls}" ${extra}>${s}</span>`;
 const stageBadge = s => { const m={'Signal':'b-signal','Contacted':'b-contacted','Nurturing':'b-nurturing','Call':'b-call','Proposal':'b-proposal','Negotiating':'b-negotiating','Signed':'b-signed','Lost':'b-lost'}; return badge(s, m[s]||'b-signal'); };
 
-setInterval(()=>{ document.getElementById('nav-time').textContent = new Date().toLocaleString('en-AU',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); },1000);
-document.getElementById('nav-time').textContent = new Date().toLocaleString('en-AU',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
 function showTab(name, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1179,9 +1209,52 @@ function renderTasks() {
   document.getElementById('tasks-label').textContent = `${done} of ${totalTasks} completed`;
   document.getElementById('tasks-bar').style.width = pct(done, totalTasks) + '%';
   document.getElementById('kpi-score').textContent = done + '/' + totalTasks;
-  document.getElementById('kpi-score-bar').style.width = pct(done, totalTasks) + '%';
+  // Circular ring
+  const ring = document.getElementById('score-ring');
+  if(ring) { const offset = 125.6 - (125.6 * done / totalTasks); ring.style.strokeDashoffset = offset; }
+  // Overdue flagging
+  flagOverdueTasks();
 
   renderWBRCommitmentsHome();
+}
+
+function flagOverdueTasks() {
+  const dayMap = {Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,'Bi-wk':null,Daily:null};
+  const today = new Date().getDay(); // 0=Sun,1=Mon...
+  document.querySelectorAll('.task-item').forEach(item => {
+    const dayEl = item.querySelector('.task-day');
+    const checkbox = item.querySelector('.task-check');
+    const label = item.querySelector('.task-label');
+    if(!dayEl || !checkbox) return;
+    const dayText = dayEl.textContent.trim();
+    const taskDay = dayMap[dayText];
+    if(taskDay === null || taskDay === undefined) return;
+    const done = checkbox.checked;
+    if(!done && taskDay < today) {
+      // Overdue — past day, not ticked
+      item.style.background = '#FFF5F5';
+      item.style.borderRadius = '6px';
+      item.style.padding = '7px 8px';
+      dayEl.style.background = '#FEE2E2';
+      dayEl.style.color = '#991B1B';
+      if(label) label.style.color = '#991B1B';
+    } else if(!done && taskDay === today) {
+      // Due today
+      item.style.background = '#FFFBEB';
+      item.style.borderRadius = '6px';
+      item.style.padding = '7px 8px';
+      dayEl.style.background = '#FEF3C7';
+      dayEl.style.color = '#92400E';
+      if(label) label.style.color = 'var(--text)';
+    } else {
+      item.style.background = '';
+      item.style.borderRadius = '';
+      item.style.padding = '9px 0';
+      dayEl.style.background = '';
+      dayEl.style.color = '';
+      if(label && !label.classList.contains('done')) label.style.color = '';
+    }
+  });
 }
 
 async function deleteDefaultTask(taskId) {
@@ -2211,9 +2284,7 @@ function renderGreeting() {
   const hour = now.getHours();
   const banner = document.getElementById('greeting-banner');
   const text = document.getElementById('greeting-text');
-  const sub = document.getElementById('greeting-sub');
   const emojiEl = document.getElementById('greeting-emoji');
-  const bg = document.getElementById('greeting-bg-anim');
 
   const dayIndex = now.getDate() % MOTIVATIONAL.length;
   const actionIndex = now.getDate() % 5;
@@ -2222,22 +2293,22 @@ function renderGreeting() {
 
   if(hour >= 5 && hour < 12) {
     timeKey = 'morning';
-    greeting = 'Good morning, Sahar';
+    greeting = 'Good morning, Sahar ☀️';
     gradient = 'linear-gradient(135deg, #92400E 0%, #D97706 40%, #FBBF24 100%)';
     anim = ANIMATIONS.sun;
   } else if(hour >= 12 && hour < 17) {
     timeKey = 'afternoon';
-    greeting = 'Good afternoon, Sahar';
+    greeting = 'Good afternoon, Sahar 🌤';
     gradient = 'linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 60%, #60A5FA 100%)';
     anim = ANIMATIONS.cloud;
   } else if(hour >= 17 && hour < 21) {
     timeKey = 'evening';
-    greeting = 'Bonne soirée, Sahar';
+    greeting = 'Bonne soirée, Sahar 🌇';
     gradient = 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #C8A97A 100%)';
     anim = ANIMATIONS.croissant;
   } else {
     timeKey = 'night';
-    greeting = 'Bonne nuit, Sahar';
+    greeting = 'Bonne nuit, Sahar 🌙';
     gradient = 'linear-gradient(135deg, #0D1B2A 0%, #1E1B4B 60%, #4338CA 100%)';
     anim = ANIMATIONS.moon;
   }
@@ -2246,12 +2317,63 @@ function renderGreeting() {
   const action = ACTION_SENTENCES[timeKey][actionIndex];
 
   banner.style.background = gradient;
-  text.innerHTML = `<div style="font-size:22px;font-weight:700;color:white;margin-bottom:6px;">${greeting}</div>
-    <div style="font-size:15px;color:rgba(255,255,255,0.85);margin-bottom:4px;">${quote}</div>
+  text.innerHTML = `
+    <div style="font-size:26px;font-weight:700;color:white;margin-bottom:8px;line-height:1.2;">${greeting}</div>
+    <div style="font-size:15px;color:rgba(255,255,255,0.85);margin-bottom:6px;line-height:1.5;">${quote}</div>
     <div style="font-size:13px;color:rgba(255,255,255,0.6);font-style:italic;">${action}</div>`;
-  sub.textContent = '';
   emojiEl.innerHTML = anim;
-  bg.innerHTML = '';
+}
+
+function updateBannerClock() {
+  const now = new Date();
+  const timeEl = document.getElementById('banner-time');
+  const dateEl = document.getElementById('banner-date');
+  const navEl = document.getElementById('nav-time');
+  const timeStr = now.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+  const dateStr = now.toLocaleDateString('en-AU',{weekday:'long',month:'long',day:'numeric'});
+  if(timeEl) timeEl.textContent = timeStr;
+  if(dateEl) dateEl.textContent = dateStr;
+  if(navEl) navEl.textContent = timeStr;
+}
+
+async function fetchSydneyWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-33.8688&longitude=151.2093&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Australia%2FSydney');
+    const data = await res.json();
+    const temp = Math.round(data.current_weather.temperature);
+    const code = data.current_weather.weathercode;
+    const desc = weatherDesc(code);
+    const icon = weatherIcon(code);
+    document.getElementById('weather-temp').textContent = `${icon} ${temp}°C`;
+    document.getElementById('weather-desc').textContent = desc + ' · Sydney';
+  } catch(e) {
+    document.getElementById('weather-temp').textContent = '—°C';
+    document.getElementById('weather-desc').textContent = 'Sydney';
+  }
+}
+
+function weatherDesc(code) {
+  if(code === 0) return 'Clear sky';
+  if(code <= 2) return 'Partly cloudy';
+  if(code === 3) return 'Overcast';
+  if(code <= 49) return 'Foggy';
+  if(code <= 59) return 'Drizzle';
+  if(code <= 69) return 'Rainy';
+  if(code <= 79) return 'Snowy';
+  if(code <= 82) return 'Rain showers';
+  if(code <= 94) return 'Thunderstorm';
+  return 'Stormy';
+}
+
+function weatherIcon(code) {
+  if(code === 0) return '☀️';
+  if(code <= 2) return '⛅';
+  if(code === 3) return '☁️';
+  if(code <= 49) return '🌫';
+  if(code <= 69) return '🌧';
+  if(code <= 79) return '❄️';
+  if(code <= 82) return '🌦';
+  return '⛈';
 }
 
 const greetingStyle = document.createElement('style');
@@ -2264,6 +2386,11 @@ greetingStyle.textContent = `
   @keyframes vs-glow{0%,100%{filter:drop-shadow(0 0 4px #FCD34D)}50%{filter:drop-shadow(0 0 14px #FCD34D)}}
 `;
 document.head.appendChild(greetingStyle);
+
+// Start clock and weather
+updateBannerClock();
+setInterval(updateBannerClock, 1000);
+fetchSydneyWeather();
 
 loadAll();
 setInterval(loadAll, 60000);
