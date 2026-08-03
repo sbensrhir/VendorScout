@@ -981,7 +981,7 @@ async function loadAll() {
   try {
     const {data} = await sb.from('weekly_bridge')
       .select('commitment_1,commitment_2,commitment_3')
-      .eq('week_start', weekStart())
+      .eq('week_start', wbrWeekStart())
       .maybeSingle();
     if(data) {
       D.settings['wbr_c1_current'] = data.commitment_1 || '';
