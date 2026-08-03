@@ -860,27 +860,32 @@ async function saveEditTask() {
 function renderWBRCommitmentsHome() {
   const el = document.getElementById('wbr-commitments-home');
   if(!el) return;
-  sb.from('weekly_bridge').select('commitment_1,commitment_2,commitment_3').eq('week_start', weekStart()).maybeSingle().then(({data}) => {
-    if(!data) { el.style.display='none'; return; }
-    const commitments = [data.commitment_1, data.commitment_2, data.commitment_3].filter(Boolean);
-    if(commitments.length === 0) { el.style.display='none'; return; }
-    el.style.display = 'block';
-    el.innerHTML = `
-      <div style="border-bottom:1px solid #FCD34D;padding-bottom:6px;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.5px;">🎯 From your WBR</span>
-        <span style="font-size:10px;color:#B45309;background:#FEF3C7;padding:1px 6px;border-radius:20px;">Priority</span>
-      </div>
-      ${commitments.map((c,i) => {
-        const savedKey = `wbr_commit_done_${weekStart()}_${i}`;
-        const done = D.settings[savedKey] === 'true';
-        return `<div class="task-item" style="padding:7px 0;">
-          <span class="priority-dot priority-high" title="WBR commitment — high priority"></span>
-          <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleWBRCommitment(${i},this.checked,'${savedKey}')">
-          <span class="task-label ${done?'done':''}" style="flex:1;">${c}</span>
-          <span class="task-day" style="background:#FEF3C7;color:#92400E;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;">WBR</span>
-        </div>`;
-      }).join('')}`;
-  });
+
+  // Use already-loaded WBR data instead of separate async call
+  const commitments = [
+    D.settings['wbr_c1_current'],
+    D.settings['wbr_c2_current'],
+    D.settings['wbr_c3_current']
+  ].filter(Boolean);
+
+  if(commitments.length === 0) { el.style.display='none'; return; }
+
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="border-bottom:1px solid #FCD34D;padding-bottom:6px;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:0.5px;">🎯 From your WBR</span>
+      <span style="font-size:10px;color:#B45309;background:#FEF3C7;padding:1px 6px;border-radius:20px;">Priority</span>
+    </div>
+    ${commitments.map((c,i) => {
+      const savedKey = `wbr_commit_done_${weekStart()}_${i}`;
+      const done = D.settings[savedKey] === 'true';
+      return `<div class="task-item" style="padding:7px 0;">
+        <span class="priority-dot priority-high" title="WBR commitment — high priority"></span>
+        <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleWBRCommitment(${i},this.checked,'${savedKey}')">
+        <span class="task-label ${done?'done':''}" style="flex:1;">${c}</span>
+        <span class="task-day" style="background:#FEF3C7;color:#92400E;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;">WBR</span>
+      </div>`;
+    }).join('')}`;
 }
 
 async function toggleWBRCommitment(idx, checked, key) {
@@ -1871,15 +1876,29 @@ async function saveWBR() {
       eta:    document.getElementById(`wbr-eta-${m.key}`)?.value||'',
     };
   });
+
+  const c1 = document.getElementById('wbr-c1')?.value||'';
+  const c2 = document.getElementById('wbr-c2')?.value||'';
+  const c3 = document.getElementById('wbr-c3')?.value||'';
+
   await sb.from('weekly_bridge').upsert({
     week_start:   wbrCurrentWeek,
     metrics:      JSON.stringify(metrics),
     wins:         document.getElementById('wbr-wins')?.value||'',
     misses:       document.getElementById('wbr-misses')?.value||'',
-    commitment_1: document.getElementById('wbr-c1')?.value||'',
-    commitment_2: document.getElementById('wbr-c2')?.value||'',
-    commitment_3: document.getElementById('wbr-c3')?.value||'',
+    commitment_1: c1,
+    commitment_2: c2,
+    commitment_3: c3,
   },{onConflict:'week_start'});
+
+  // Also store commitments in settings so Home tab can read them without extra query
+  await sb.from('dashboard_settings').upsert([
+    {key:'wbr_c1_current', value:c1},
+    {key:'wbr_c2_current', value:c2},
+    {key:'wbr_c3_current', value:c3},
+  ],{onConflict:'key'});
+
+  await loadAll();
   await loadWBRHistory();
   alert('WBR saved! 🎯');
 }
