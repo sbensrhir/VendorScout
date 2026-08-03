@@ -1090,7 +1090,8 @@ function renderKPIs() {
   document.getElementById('kpi-subs-bar').style.cssText = `background:var(--blue);width:${pct(subs,1000)}%`;
   const done = D.tasks.filter(t=>t.completed).length;
   document.getElementById('kpi-score').textContent = done+'/'+TASKS.length;
-  document.getElementById('kpi-score-bar').style.cssText = `background:var(--green);width:${pct(done,TASKS.length)}%`;
+  const ring = document.getElementById('score-ring');
+  if(ring) { const offset = 125.6 - (125.6 * done / TASKS.length); ring.style.strokeDashoffset = offset; }
 
   // pipeline tab
   const pTotal = D.pipeline.reduce((s,r)=>s+Number(r.estimated_value),0);
