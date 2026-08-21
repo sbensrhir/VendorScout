@@ -811,10 +811,26 @@ async function deleteTopic(id) {
   await loadAll();
 }
 
-function restoreActiveTab() {
+function getSavedTab() {
   let saved = null;
   try { saved = localStorage.getItem('vs-content-strategy-active-tab'); } catch(e) {}
-  if(saved && saved!=='overview' && document.getElementById('panel-'+saved)) switchTab(saved, null);
+  return (saved && saved!=='overview' && document.getElementById('panel-'+saved)) ? saved : null;
+}
+
+// Switch the visible tab immediately, before data loads, so refresh doesn't flash Overview first
+const preloadTab = getSavedTab();
+if(preloadTab) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+preloadTab).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{
+    if(t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+preloadTab+"'")) t.classList.add('active');
+  });
+}
+
+function restoreActiveTab() {
+  const saved = getSavedTab();
+  if(saved) switchTab(saved, null);
 }
 
 loadAll().then(restoreActiveTab);
