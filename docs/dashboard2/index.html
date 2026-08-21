@@ -135,7 +135,7 @@
 <div id="tab-home" class="page active">
 
   <!-- GREETING BANNER — large hero -->
-  <div id="greeting-banner" style="border-radius:20px;padding:2rem 2.5rem;margin-bottom:1.5rem;overflow:hidden;position:relative;min-height:160px;">
+  <div id="greeting-banner" style="border-radius:20px;padding:2rem 2.5rem;margin-bottom:1.5rem;overflow:hidden;position:relative;min-height:160px;box-shadow:0 12px 32px -8px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);">
     <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;">
 
       <!-- Left: greeting + quote + action -->
@@ -161,7 +161,7 @@
       </div>
 
     </div>
-    <div id="greeting-bg-anim" style="position:absolute;inset:0;pointer-events:none;"></div>
+    <div id="greeting-bg-anim" style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 90% at 88% -10%, rgba(255,255,255,0.16) 0%, transparent 60%), radial-gradient(ellipse 45% 70% at 5% 115%, rgba(255,255,255,0.10) 0%, transparent 65%);"></div>
   </div>
 
   <div id="alerts-bar" style="margin-bottom:1rem;display:none;"></div>
@@ -1359,7 +1359,9 @@ function renderUrgent() {
 }
 
 function renderHomeContent() {
-  const upcoming=D.content.filter(c=>c.status!=='published').slice(0,2);
+  const upcoming=D.content.filter(c=>c.status!=='published')
+    .sort((a,b)=>(a.post_date||'9999')>(b.post_date||'9999')?1:-1)
+    .slice(0,2);
   document.getElementById('home-content').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts — add some!</div>':`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${upcoming.map(c=>`<div style="background:var(--bg);border-radius:8px;padding:12px;"><div style="display:flex;gap:6px;margin-bottom:6px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span><span class="badge b-${c.status}">${c.status}</span></div><div style="font-size:14px;font-weight:500;">${c.topic}</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div></div>`).join('')}</div>`;
 }
 
@@ -2240,7 +2242,7 @@ const ACTION_SENTENCES = {
     "What got done today? What ships tomorrow?",
     "The best founders review before they rest.",
     "Log your wins. They matter.",
-    "Croissant earned. Dashboard updated. ✅",
+    "Another day banked. Dashboard's current. ✅",
   ],
   night: [
     "Rest is part of the strategy.",
@@ -2274,8 +2276,22 @@ const ANIMATIONS = {
     </svg>
   </div>`,
 
-  croissant: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-    <div style="font-size:52px;line-height:1;animation:vs-rock 3s ease-in-out infinite;display:inline-block;transform-origin:center bottom;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));">🥐</div>
+  sunset: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+    <svg viewBox="0 0 70 70" width="70" height="70">
+      <defs>
+        <linearGradient id="sunset-glow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FDE68A"/>
+          <stop offset="100%" stop-color="#F97316"/>
+        </linearGradient>
+        <clipPath id="sunset-clip"><rect x="0" y="0" width="70" height="42"/></clipPath>
+      </defs>
+      <g clip-path="url(#sunset-clip)">
+        <circle cx="35" cy="38" r="17" fill="url(#sunset-glow)" style="animation:vs-pulse 3s ease-in-out infinite;transform-origin:35px 38px;"/>
+      </g>
+      <line x1="6" y1="42" x2="64" y2="42" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+      ${[[14,50],[30,55],[46,50],[58,55]].map(([x,y],i)=>`
+        <line x1="${x-5}" y1="${y}" x2="${x+5}" y2="${y}" stroke="#FDBA74" stroke-width="2" stroke-linecap="round" opacity="0.6" style="animation:vs-pulse ${2+i*0.4}s ease-in-out infinite;"/>`).join('')}
+    </svg>
   </div>`,
 
   moon: `<div style="position:relative;width:70px;height:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
@@ -2302,18 +2318,18 @@ function renderGreeting() {
   if(hour >= 5 && hour < 12) {
     timeKey = 'morning';
     greeting = 'Good morning, Sahar ☀️';
-    gradient = 'linear-gradient(135deg, #92400E 0%, #D97706 40%, #FBBF24 100%)';
+    gradient = 'linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 55%, #7DD3FC 100%)';
     anim = ANIMATIONS.sun;
   } else if(hour >= 12 && hour < 17) {
     timeKey = 'afternoon';
     greeting = 'Good afternoon, Sahar 🌤';
-    gradient = 'linear-gradient(135deg, #1E3A5F 0%, #1D4ED8 60%, #60A5FA 100%)';
+    gradient = 'linear-gradient(135deg, #9A3412 0%, #EA580C 45%, #FB923C 100%)';
     anim = ANIMATIONS.cloud;
   } else if(hour >= 17 && hour < 21) {
     timeKey = 'evening';
     greeting = 'Bonne soirée, Sahar 🌇';
-    gradient = 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #C8A97A 100%)';
-    anim = ANIMATIONS.croissant;
+    gradient = 'linear-gradient(135deg, #581C87 0%, #BE185D 45%, #F97316 100%)';
+    anim = ANIMATIONS.sunset;
   } else {
     timeKey = 'night';
     greeting = 'Bonne nuit, Sahar 🌙';
@@ -2390,7 +2406,6 @@ greetingStyle.textContent = `
   @keyframes vs-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
   @keyframes vs-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
   @keyframes vs-twinkle{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1.2)}}
-  @keyframes vs-rock{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
   @keyframes vs-glow{0%,100%{filter:drop-shadow(0 0 4px #FCD34D)}50%{filter:drop-shadow(0 0 14px #FCD34D)}}
 `;
 document.head.appendChild(greetingStyle);
