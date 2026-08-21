@@ -107,12 +107,19 @@
   .priority-med { background:#E9C46A; }
   .priority-none { background:#E2E8F0; }
 
+  /* Mobile tab dropdown — hidden on desktop, shown in its place below 900px */
+  #mobile-tab-select { display: none; }
+
   /* RESPONSIVE — tablet and below */
   @media (max-width: 900px) {
-    nav { padding: 0 1rem; }
-    .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-    .nav-tabs::-webkit-scrollbar { display: none; }
-    .nav-tab { white-space: nowrap; padding: 8px 10px; font-size: 12px; }
+    nav { padding: 0 1rem; flex-wrap: wrap; height: auto; min-height: 56px; gap: 8px 0; }
+    .nav-tabs { display: none; }
+    #mobile-tab-select {
+      display: block; flex: 1; min-width: 0; margin: 0 10px;
+      background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px; padding: 7px 10px; font-size: 13px; font-weight: 500;
+    }
+    #mobile-tab-select option { color: var(--text); background: white; }
     .page { padding: 1rem; }
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
@@ -147,6 +154,16 @@
     <button class="nav-tab" onclick="showTab('wbr',this)">Weekly Bridge</button>
     <button class="nav-tab" onclick="showTab('knowledge',this)">Knowledge</button>
   </div>
+  <select id="mobile-tab-select" onchange="showTab(this.value,null)">
+    <option value="home">🏠 Home</option>
+    <option value="pipeline">Pipeline</option>
+    <option value="content">Content</option>
+    <option value="signals">Warm Signals</option>
+    <option value="revenue">Revenue</option>
+    <option value="goals">Goals</option>
+    <option value="wbr">Weekly Bridge</option>
+    <option value="knowledge">Knowledge</option>
+  </select>
   <div style="display:flex;align-items:center;gap:12px;">
     <a href="../content-strategy/" target="_blank" style="color:var(--gold);text-decoration:none;font-size:13px;font-weight:500;padding:6px 12px;border:1px solid rgba(200,169,122,0.3);border-radius:6px;white-space:nowrap;">✏️ Content Strategy ↗</a>
     <div class="nav-time" id="nav-time"></div>
@@ -1011,6 +1028,8 @@ function showTab(name, btn) {
     });
   }
   try { localStorage.setItem('vs-dashboard2-active-tab', name); } catch(e) {}
+  const mobileSel = document.getElementById('mobile-tab-select');
+  if(mobileSel) mobileSel.value = name;
   if(name==='pipeline') renderPipeChart();
   if(name==='content') renderContentTab();
   if(name==='revenue') renderRevenueTab();
@@ -2459,6 +2478,8 @@ if(preloadTab) {
   document.querySelectorAll('.nav-tab').forEach(t=>{
     if(t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+preloadTab+"'")) t.classList.add('active');
   });
+  const preloadSel = document.getElementById('mobile-tab-select');
+  if(preloadSel) preloadSel.value = preloadTab;
 }
 
 function restoreActiveTab() {

@@ -85,11 +85,20 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 .fw-arrow{color:rgba(255,255,255,0.3);font-size:16px;}
 .loading{color:var(--muted);font-size:13px;padding:1rem 0;text-align:center;}
 
+/* Mobile tab dropdown — hidden on desktop, shown in place of the tab row below 900px */
+#mobile-tab-select { display: none; }
+
 /* RESPONSIVE — tablet and below */
 @media (max-width: 900px) {
   .g2, .g3, .g4-dynamic, .g3-dynamic, .g2-dynamic, .form-row { grid-template-columns: 1fr !important; }
   .main { padding: 1.25rem; }
   .hero { padding: 2rem 1.25rem; }
+  #tab-row-wrap { display: none; }
+  #mobile-tab-select {
+    display: block; width: 100%; margin-bottom: 1.5rem;
+    background: white; color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 500;
+  }
 }
 
 /* RESPONSIVE — phone */
@@ -129,7 +138,7 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 <div class="main">
 
   <!-- Tabs -->
-  <div style="border-bottom:1px solid var(--border);margin-bottom:2rem;overflow-x:auto;">
+  <div id="tab-row-wrap" style="border-bottom:1px solid var(--border);margin-bottom:2rem;overflow-x:auto;">
     <div style="display:flex;align-items:flex-end;min-width:max-content;">
 
       <!-- Standalone tabs -->
@@ -171,6 +180,23 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 
     </div>
   </div>
+
+  <select id="mobile-tab-select" onchange="switchTab(this.value,null)">
+    <option value="overview">Overview</option>
+    <option value="upcoming">📅 Upcoming</option>
+    <option value="sequence">🗂 Sequence</option>
+    <optgroup label="Pillar 1 · Market intelligence">
+      <option value="p1a">1a · Retail landscape</option>
+      <option value="p1b">1b · Brand performance</option>
+      <option value="p1c">1c · Category trends</option>
+    </optgroup>
+    <optgroup label="Pillar 2 · Commercial strategy">
+      <option value="p2a">2a · Amazon mastery</option>
+      <option value="p2b">2b · Channel architecture</option>
+      <option value="p2c">2c · Brand decisions</option>
+      <option value="p2d">2d · Profitability & ops</option>
+    </optgroup>
+  </select>
 
   <!-- OVERVIEW -->
   <div id="panel-overview" class="panel active">
@@ -609,6 +635,8 @@ function switchTab(name, btn) {
   }
   if(['p1a','p1b','p1c','p2a','p2b','p2c','p2d'].includes(name)) renderSubPillar(name);
   try { localStorage.setItem('vs-content-strategy-active-tab', name); } catch(e) {}
+  const mobileSel = document.getElementById('mobile-tab-select');
+  if(mobileSel) mobileSel.value = name;
 }
 
 async function loadAll() {
@@ -849,6 +877,8 @@ if(preloadTab) {
   document.querySelectorAll('.tab').forEach(t=>{
     if(t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+preloadTab+"'")) t.classList.add('active');
   });
+  const preloadSel = document.getElementById('mobile-tab-select');
+  if(preloadSel) preloadSel.value = preloadTab;
 }
 
 function restoreActiveTab() {
