@@ -97,13 +97,14 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
   #mobile-tab-select {
     display: block; width: 100%; margin-bottom: 1.5rem;
     background: white; color: var(--text); border: 1px solid var(--border);
-    border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 500;
+    border-radius: 8px; padding: 12px 14px; font-size: 15px; font-weight: 600;
   }
 }
 
 /* RESPONSIVE — phone */
 @media (max-width: 560px) {
   nav { padding: 0 1rem; }
+  .nav-brand-text { display: none; }
   .main { padding: 1rem; }
   .hero { padding: 1.5rem 1rem; }
 }
@@ -112,7 +113,7 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 <body>
 
 <nav>
-  <div class="nav-brand"><div class="nav-logo">VS</div>VendorScout</div>
+  <div class="nav-brand"><div class="nav-logo">VS</div><span class="nav-brand-text">VendorScout</span></div>
   <div class="nav-links">
     <a href="../dashboard2/" class="nav-link">← Dashboard</a>
     <a href="#" class="nav-link gold">Content Strategy</a>

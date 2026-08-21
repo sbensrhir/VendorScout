@@ -112,12 +112,13 @@
 
   /* RESPONSIVE — tablet and below */
   @media (max-width: 900px) {
-    nav { padding: 0 1rem; flex-wrap: wrap; height: auto; min-height: 56px; gap: 8px 0; }
+    nav { padding: 10px 1rem; flex-wrap: wrap; height: auto; min-height: 56px; gap: 10px 0; }
     .nav-tabs { display: none; }
+    .nav-brand-text { display: none; }
     #mobile-tab-select {
-      display: block; flex: 1; min-width: 0; margin: 0 10px;
-      background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 6px; padding: 7px 10px; font-size: 13px; font-weight: 500;
+      display: block; flex: 1 1 100%; order: 3; width: 100%;
+      background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 8px; padding: 12px 14px; font-size: 15px; font-weight: 600;
     }
     #mobile-tab-select option { color: var(--text); background: white; }
     .page { padding: 1rem; }
@@ -127,7 +128,6 @@
 
   /* RESPONSIVE — phone */
   @media (max-width: 560px) {
-    .nav-brand { font-size: 15px; }
     .nav-time { display: none; }
     .kpi-grid { grid-template-columns: 1fr; }
     #greeting-banner { padding: 1.25rem 1.5rem !important; }
@@ -141,8 +141,8 @@
 
 <nav>
   <div class="nav-brand" style="display:flex;align-items:center;gap:10px;">
-    <div style="width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:-0.5px;">VS</div>
-    VendorScout
+    <div style="width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--navy);letter-spacing:-0.5px;flex-shrink:0;">VS</div>
+    <span class="nav-brand-text">VendorScout</span>
   </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showTab('home',this)">Home</button>
