@@ -84,6 +84,20 @@ textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:8p
 .fw-step{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,0.8);white-space:nowrap;}
 .fw-arrow{color:rgba(255,255,255,0.3);font-size:16px;}
 .loading{color:var(--muted);font-size:13px;padding:1rem 0;text-align:center;}
+
+/* RESPONSIVE — tablet and below */
+@media (max-width: 900px) {
+  .g2, .g3, .g4-dynamic, .g3-dynamic, .g2-dynamic, .form-row { grid-template-columns: 1fr !important; }
+  .main { padding: 1.25rem; }
+  .hero { padding: 2rem 1.25rem; }
+}
+
+/* RESPONSIVE — phone */
+@media (max-width: 560px) {
+  nav { padding: 0 1rem; }
+  .main { padding: 1rem; }
+  .hero { padding: 1.5rem 1rem; }
+}
 </style>
 </head>
 <body>
@@ -447,6 +461,13 @@ let contentData = [];
 let settingsData = {};
 let editingTopicId = null;
 
+// Escapes user-entered text before it's injected via innerHTML, so a topic/hook/
+// description containing HTML can't run as markup (stored-XSS hardening).
+function esc(s) {
+  if(s===null || s===undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 const SUBPILLARS = {
   p1a: {label:'1a · Retail landscape', color:'#DBEAFE', text:'#1D4ED8'},
   p1b: {label:'1b · Brand performance', color:'#E0F2FE', text:'#0369A1'},
@@ -618,7 +639,7 @@ function renderBalanceTracker() {
   const total = published.length || 1;
   const colors = {p1a:'#3B82F6',p1b:'#0369A1',p1c:'#10B981',p2a:'#F59E0B',p2b:'#8B5CF6',p2c:'#A855F7',p2d:'#2A9D8F',newsletter:'#E63946'};
 
-  el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">` +
+  el.innerHTML = `<div class="g4-dynamic" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">` +
     Object.entries(SUBPILLARS).map(([key, sp]) => {
       const count = published.filter(c => c.sub_pillar === key).length;
       const pct = Math.round(count / total * 100);
@@ -645,13 +666,13 @@ function renderUpcoming() {
     const statusColors = {planned:'#F1F5F9:#64748B',drafted:'#FEF3C7:#92400E',published:'#D1FAE5:#065F46'};
     const [sbg,scol] = (statusColors[c.status]||'#F1F5F9:#64748B').split(':');
     return `<div class="upcoming-item">
-      <div class="upcoming-date">${c.post_date || 'TBD'}</div>
-      <span style="background:${sp.color};color:${sp.text};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;">${sp.label}</span>
+      <div class="upcoming-date">${esc(c.post_date) || 'TBD'}</div>
+      <span style="background:${sp.color};color:${sp.text};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;">${esc(sp.label)}</span>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.topic}</div>
-        ${c.target_audience ? `<div style="font-size:11px;color:var(--muted);">${c.target_audience}</div>` : ''}
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(c.topic)}</div>
+        ${c.target_audience ? `<div style="font-size:11px;color:var(--muted);">${esc(c.target_audience)}</div>` : ''}
       </div>
-      <span style="background:${sbg};color:${scol};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;">${c.status}</span>
+      <span style="background:${sbg};color:${scol};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;">${esc(c.status)}</span>
       <div style="display:flex;gap:4px;">
         <button class="btn-sm" onclick="editTopic('${c.id}')">Edit</button>
         <button class="btn-sm" style="color:var(--red);" onclick="deleteTopic('${c.id}')">✕</button>
@@ -668,13 +689,13 @@ function renderPublished() {
   el.innerHTML = pub.map(c => {
     const sp = SUBPILLARS[c.sub_pillar] || {label:'—',color:'#F1F5F9',text:'#64748B'};
     return `<div class="upcoming-item">
-      <div class="upcoming-date">${c.post_date || '—'}</div>
-      <span style="background:${sp.color};color:${sp.text};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;">${sp.label}</span>
+      <div class="upcoming-date">${esc(c.post_date) || '—'}</div>
+      <span style="background:${sp.color};color:${sp.text};padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;">${esc(sp.label)}</span>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:500;">${c.topic}</div>
+        <div style="font-size:13px;font-weight:500;">${esc(c.topic)}</div>
         <div style="font-size:11px;color:var(--muted);">${(c.impressions||0).toLocaleString()} impressions · ${c.likes||0} likes</div>
       </div>
-      ${c.linkedin_url ? `<a href="${c.linkedin_url}" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none;">View ↗</a>` : ''}
+      ${c.linkedin_url ? `<a href="${esc(c.linkedin_url)}" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none;">View ↗</a>` : ''}
     </div>`;
   }).join('');
 }
@@ -695,7 +716,7 @@ function renderSubPillar(key) {
         ${isP2 ? 'Pillar 2 · Commercial strategy' : 'Pillar 1 · Market intelligence'}</div>
       <div style="font-size:20px;font-weight:700;color:var(--gold);margin-bottom:4px;">${sp.label}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+    <div class="g3-dynamic" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
       <div class="card" style="margin-bottom:0;">
         <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Who it attracts</div>
         ${meta.personas.map(p => `<div class="persona-row"><span class="dot" style="background:${p.dot};margin-top:3px;"></span><div><p style="font-size:13px;font-weight:500;margin:0;">${p.name}</p><p style="font-size:11px;color:var(--muted);margin:0;">${p.sub}</p></div></div>`).join('')}
@@ -717,7 +738,7 @@ function renderSubPillar(key) {
         <button class="btn btn-primary" onclick="openAddTopic('${key}')">+ Add topic</button>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:1rem;">Click any topic to schedule it to your content calendar. Topics you've already scheduled are highlighted.</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="topics-${key}">
+      <div class="g2-dynamic" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="topics-${key}">
         ${topics.map(t => {
           const isSaved = savedTopics.some(s => s.topic === t.title);
           return `<div class="topic-card" style="${isSaved?'background:#F0FDF4;border-color:#86EFAC;':''}">
@@ -791,12 +812,14 @@ async function saveTopic() {
     post_date: document.getElementById('t-date').value || null,
     status: document.getElementById('t-status').value,
     hook: document.getElementById('t-hook').value,
-    impressions: 0, likes: 0, comments: 0,
   };
   if(editingTopicId) {
+    // Don't touch impressions/likes/comments on edit — preserves real
+    // engagement numbers on posts that have already been published.
     await sb.from('content_calendar').update(payload).eq('id', editingTopicId);
     editingTopicId = null;
   } else {
+    payload.impressions = 0; payload.likes = 0; payload.comments = 0;
     await sb.from('content_calendar').insert(payload);
   }
   document.getElementById('topic-modal-title').textContent = 'Add post to calendar';

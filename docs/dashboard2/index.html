@@ -106,6 +106,28 @@
   .priority-high { background:#E63946; }
   .priority-med { background:#E9C46A; }
   .priority-none { background:#E2E8F0; }
+
+  /* RESPONSIVE — tablet and below */
+  @media (max-width: 900px) {
+    nav { padding: 0 1rem; }
+    .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .nav-tab { white-space: nowrap; padding: 8px 10px; font-size: 12px; }
+    .page { padding: 1rem; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* RESPONSIVE — phone */
+  @media (max-width: 560px) {
+    .nav-brand { font-size: 15px; }
+    .nav-time { display: none; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    #greeting-banner { padding: 1.25rem 1.5rem !important; }
+    #greeting-banner > div > div { flex-direction: column; align-items: flex-start !important; gap: 14px; }
+    #banner-clock, #banner-weather { text-align: left !important; }
+    .card { padding: 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -913,7 +935,7 @@ function renderWBRCommitmentsHome() {
       return `<div class="task-item" style="padding:7px 0;">
         <span class="priority-dot priority-high" title="WBR commitment — high priority"></span>
         <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleWBRCommitment(${i},this.checked,'${savedKey}')">
-        <span class="task-label ${done?'done':''}" style="flex:1;">${c}</span>
+        <span class="task-label ${done?'done':''}" style="flex:1;">${esc(c)}</span>
         <span class="task-day" style="background:#FEF3C7;color:#92400E;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;">WBR</span>
       </div>`;
     }).join('')}`;
@@ -923,6 +945,13 @@ async function toggleWBRCommitment(idx, checked, key) {
   await sb.from('dashboard_settings').upsert({key, value:checked.toString()}, {onConflict:'key'});
   D.settings[key] = checked.toString();
   renderWBRCommitmentsHome();
+}
+
+// Escapes user-entered text before it's injected via innerHTML, so a topic/company/
+// notes field containing HTML can't run as markup (stored-XSS hardening).
+function esc(s) {
+  if(s===null || s===undefined) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 let D = { pipeline:[], content:[], signals:[], revenue:[], tasks:[], settings:{}, training:[], certs:[] };
@@ -1180,8 +1209,8 @@ function renderTasks() {
       <span class="drag-handle" title="Drag to reorder">⠿</span>
       <span class="priority-dot priority-${priority}" title="Click to set priority" onclick="cyclePriority('${t.id}',true)"></span>
       <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.id}',this.checked)">
-      <span class="task-label ${done?'done':''}" style="flex:1;">${name}</span>
-      <span class="task-day">${day}</span>
+      <span class="task-label ${done?'done':''}" style="flex:1;">${esc(name)}</span>
+      <span class="task-day">${esc(day)}</span>
       ${taskEditMode ? `
         <button onclick="openEditTask('${t.id}','${name.replace(/'/g,"\\'")}','${day}',true)" style="background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:11px;padding:1px 6px;">Edit</button>
         <button onclick="deleteDefaultTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0 4px;" title="Remove">✕</button>
@@ -1196,8 +1225,8 @@ function renderTasks() {
       <span class="drag-handle" title="Drag to reorder">⠿</span>
       <span class="priority-dot priority-${priority}" title="Click to set priority" onclick="cyclePriority('${t.id}',false)"></span>
       <input type="checkbox" class="task-check" ${done?'checked':''} onchange="toggleTask('${t.task_id}',this.checked,'${t.id}')">
-      <span class="task-label ${done?'done':''}" style="flex:1;">${t.task_name}</span>
-      <span class="task-day">${t.task_day||''}</span>
+      <span class="task-label ${done?'done':''}" style="flex:1;">${esc(t.task_name)}</span>
+      <span class="task-day">${esc(t.task_day)||''}</span>
       ${taskEditMode ? `
         <button onclick="openEditTask('${t.id}','${(t.task_name||'').replace(/'/g,"\\'")}','${t.task_day||''}',false)" style="background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);font-size:11px;padding:1px 6px;">Edit</button>
         <button onclick="deleteCustomTask('${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:12px;padding:0 4px;">✕</button>
@@ -1355,14 +1384,14 @@ function renderHomeFunnel() {
 
 function renderUrgent() {
   const urgent=D.pipeline.filter(p=>p.next_action_date&&!['Signed','Lost'].includes(p.stage)).slice(0,3);
-  document.getElementById('urgent-leads').innerHTML=urgent.length===0?'<div style="color:var(--muted);font-size:13px;padding:8px 0;">No urgent actions — great!</div>':urgent.map(p=>`<div class="urgent-item"><div><div style="font-size:14px;font-weight:500;">${p.company}</div><div style="font-size:12px;color:var(--muted);">${p.next_action||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;">${stageBadge(p.stage)}<div style="font-size:12px;color:${new Date(p.next_action_date)<new Date()?'var(--red)':'var(--muted)'};font-weight:500;">${p.next_action_date}</div></div></div>`).join('');
+  document.getElementById('urgent-leads').innerHTML=urgent.length===0?'<div style="color:var(--muted);font-size:13px;padding:8px 0;">No urgent actions — great!</div>':urgent.map(p=>`<div class="urgent-item"><div><div style="font-size:14px;font-weight:500;">${esc(p.company)}</div><div style="font-size:12px;color:var(--muted);">${esc(p.next_action)||'—'}</div></div><div style="display:flex;align-items:center;gap:8px;">${stageBadge(p.stage)}<div style="font-size:12px;color:${new Date(p.next_action_date)<new Date()?'var(--red)':'var(--muted)'};font-weight:500;">${p.next_action_date}</div></div></div>`).join('');
 }
 
 function renderHomeContent() {
   const upcoming=D.content.filter(c=>c.status!=='published')
     .sort((a,b)=>(a.post_date||'9999')>(b.post_date||'9999')?1:-1)
     .slice(0,2);
-  document.getElementById('home-content').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts — add some!</div>':`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${upcoming.map(c=>`<div style="background:var(--bg);border-radius:8px;padding:12px;"><div style="display:flex;gap:6px;margin-bottom:6px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span><span class="badge b-${c.status}">${c.status}</span></div><div style="font-size:14px;font-weight:500;">${c.topic}</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div></div>`).join('')}</div>`;
+  document.getElementById('home-content').innerHTML=upcoming.length===0?'<div style="color:var(--muted);font-size:13px;">No upcoming posts — add some!</div>':`<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">${upcoming.map(c=>`<div style="background:var(--bg);border-radius:8px;padding:12px;"><div style="display:flex;gap:6px;margin-bottom:6px;"><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${esc(c.platform)}</span><span class="badge b-${c.status}">${esc(c.status)}</span></div><div style="font-size:14px;font-weight:500;">${esc(c.topic)}</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">${c.post_date||'TBD'} · ${esc(c.target_audience)||'—'}</div></div>`).join('')}</div>`;
 }
 
 function renderPipeChart() {
@@ -1378,7 +1407,7 @@ function renderPipeChart() {
 function renderPipeTable() {
   const f=document.getElementById('stage-filter')?.value;
   const data=f?D.pipeline.filter(p=>p.stage===f):D.pipeline;
-  document.getElementById('pipe-tbody').innerHTML=data.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No leads yet</td></tr>':data.map(p=>`<tr><td><strong>${p.company}</strong>${p.notes?`<br><span style="font-size:11px;color:var(--muted);">${p.notes.substring(0,40)}${p.notes.length>40?'...':''}</span>`:''}</td><td>${p.contact_name||'—'}<br><span style="font-size:11px;color:var(--muted);">${p.contact_role||''}</span></td><td>${p.source||'—'}</td><td>${stageBadge(p.stage)}</td><td>${fmt(p.estimated_value)}</td><td>${p.next_action||'—'}</td><td style="color:${p.next_action_date&&new Date(p.next_action_date)<new Date()?'var(--red)':'var(--text)'}">${p.next_action_date||'—'}</td><td style="display:flex;gap:4px;"><button class="btn-sm" onclick="editLead('${p.id}')">Edit</button><button class="btn-sm" style="color:var(--red);" onclick="delLead('${p.id}')">✕</button></td></tr>`).join('');
+  document.getElementById('pipe-tbody').innerHTML=data.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No leads yet</td></tr>':data.map(p=>`<tr><td><strong>${esc(p.company)}</strong>${p.notes?`<br><span style="font-size:11px;color:var(--muted);">${esc(p.notes.substring(0,40))}${p.notes.length>40?'...':''}</span>`:''}</td><td>${esc(p.contact_name)||'—'}<br><span style="font-size:11px;color:var(--muted);">${esc(p.contact_role)||''}</span></td><td>${esc(p.source)||'—'}</td><td>${stageBadge(p.stage)}</td><td>${fmt(p.estimated_value)}</td><td>${esc(p.next_action)||'—'}</td><td style="color:${p.next_action_date&&new Date(p.next_action_date)<new Date()?'var(--red)':'var(--text)'}">${p.next_action_date||'—'}</td><td style="display:flex;gap:4px;"><button class="btn-sm" onclick="editLead('${p.id}')">Edit</button><button class="btn-sm" style="color:var(--red);" onclick="delLead('${p.id}')">✕</button></td></tr>`).join('');
 }
 
 function editLead(id) {
@@ -1465,11 +1494,11 @@ function renderContentTab() {
     ?'<div style="color:var(--muted);font-size:13px;padding:8px 0;">No upcoming posts — add your next post!</div>'
     :upcoming.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;gap:6px;margin-bottom:4px;">
-          <span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span>
-          <span class="badge" style="background:${c.status==='drafted'?'#FEF3C7':'#F1F5F9'};color:${c.status==='drafted'?'#92400E':'#64748B'}">${c.status}</span>
+          <span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${esc(c.platform)}</span>
+          <span class="badge" style="background:${c.status==='drafted'?'#FEF3C7':'#F1F5F9'};color:${c.status==='drafted'?'#92400E':'#64748B'}">${esc(c.status)}</span>
         </div>
-        <div style="font-size:14px;font-weight:500;">${c.topic}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.post_date||'TBD'} · ${c.target_audience||'—'}</div>
+        <div style="font-size:14px;font-weight:500;">${esc(c.topic)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.post_date||'TBD'} · ${esc(c.target_audience)||'—'}</div>
         <div style="margin-top:6px;display:flex;gap:6px;">
           <button class="btn-sm" style="background:#D1FAE5;color:#065F46;border-color:#A7F3D0;" onclick="markPub('${c.id}')">✓ Mark Published</button>
           <button class="btn-sm" onclick="editContent('${c.id}')">Edit</button>
@@ -1493,12 +1522,12 @@ function renderContentTab() {
       const [sbg,scol]=(statusStyle[c.status]||'#F1F5F9:#64748B').split(':');
       return `<tr>
         <td>${c.post_date||'TBD'}</td>
-        <td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${c.platform}</span></td>
-        <td style="max-width:180px;">${c.linkedin_url?`<a href="${c.linkedin_url}" target="_blank" style="color:var(--blue);text-decoration:none;">${c.topic} ↗</a>`:c.topic}</td>
+        <td><span class="badge" style="background:#DBEAFE;color:#1D4ED8;">${esc(c.platform)}</span></td>
+        <td style="max-width:180px;">${c.linkedin_url?`<a href="${esc(c.linkedin_url)}" target="_blank" style="color:var(--blue);text-decoration:none;">${esc(c.topic)} ↗</a>`:esc(c.topic)}</td>
         <td><strong>${(c.impressions||0).toLocaleString()}</strong></td>
         <td>${c.likes||0}</td>
         <td>${c.comments||0}</td>
-        <td><span class="badge" style="background:${sbg};color:${scol}">${c.status}</span></td>
+        <td><span class="badge" style="background:${sbg};color:${scol}">${esc(c.status)}</span></td>
         <td><span class="badge" style="background:${c.generated_inbound?'#D1FAE5':'#F1F5F9'};color:${c.generated_inbound?'#065F46':'#64748B'}">${c.generated_inbound?'Yes':'No'}</span></td>
         <td style="display:flex;gap:4px;">
           ${c.status!=='published'?`<button class="btn-sm" style="color:#065F46;" onclick="markPub('${c.id}')">✓</button>`:''}
@@ -1578,7 +1607,7 @@ async function delContent(id) {
 
 function renderSigTable() {
   const typeStyle={'Liked post':'#DBEAFE;#1D4ED8','Commented':'#D1FAE5;#065F46','Connected on LinkedIn':'#FEF3C7;#92400E','Newsletter subscriber':'#EDE9FE;#6D28D9','Event met':'#CCFBF1;#134E4A'};
-  document.getElementById('sig-tbody').innerHTML=D.signals.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No signals yet</td></tr>':D.signals.map(s=>{const [bg,col]=(typeStyle[s.signal_type]||'#F1F5F9;#64748B').split(';');return`<tr><td><strong>${s.name}</strong></td><td>${s.company||'—'}</td><td><span class="badge" style="background:${bg};color:${col}">${s.signal_type}</span></td><td>${s.signal_date||'—'}</td><td style="max-width:150px;">${s.content_engaged||'—'}</td><td><label class="toggle"><input type="checkbox" ${s.contacted?'checked':''} onchange="updSig('${s.id}','contacted',this.checked)"><span class="toggle-slider"></span></label></td><td><label class="toggle"><input type="checkbox" ${s.responded?'checked':''} onchange="updSig('${s.id}','responded',this.checked)"><span class="toggle-slider"></span></label></td><td><button class="btn-sm" onclick="delSig('${s.id}')">✕</button></td></tr>`;}).join('');
+  document.getElementById('sig-tbody').innerHTML=D.signals.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">No signals yet</td></tr>':D.signals.map(s=>{const [bg,col]=(typeStyle[s.signal_type]||'#F1F5F9;#64748B').split(';');return`<tr><td><strong>${esc(s.name)}</strong></td><td>${esc(s.company)||'—'}</td><td><span class="badge" style="background:${bg};color:${col}">${esc(s.signal_type)}</span></td><td>${s.signal_date||'—'}</td><td style="max-width:150px;">${esc(s.content_engaged)||'—'}</td><td><label class="toggle"><input type="checkbox" ${s.contacted?'checked':''} onchange="updSig('${s.id}','contacted',this.checked)"><span class="toggle-slider"></span></label></td><td><label class="toggle"><input type="checkbox" ${s.responded?'checked':''} onchange="updSig('${s.id}','responded',this.checked)"><span class="toggle-slider"></span></label></td><td><button class="btn-sm" onclick="delSig('${s.id}')">✕</button></td></tr>`;}).join('');
 }
 
 async function saveSignal() {
@@ -1602,7 +1631,7 @@ async function delSig(id) {
 
 function renderRevenueTab() {
   const el=document.getElementById('rev-list');
-  el.innerHTML=D.revenue.length===0?'<div style="color:var(--muted);font-size:13px;">No clients yet — add your first!</div>':D.revenue.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:14px;font-weight:600;">${r.client_name}</div><div style="font-size:12px;color:var(--muted);">${r.service_type} · Since ${r.start_date||'—'}</div></div><div style="display:flex;align-items:center;gap:12px;"><span class="badge" style="background:${r.status==='active'?'#D1FAE5':'#F1F5F9'};color:${r.status==='active'?'#065F46':'#64748B'}">${r.status}</span><strong style="font-size:16px;">${fmt(r.monthly_value)}</strong><button class="btn-sm" onclick="delRev('${r.id}')">✕</button></div></div>`).join('');
+  el.innerHTML=D.revenue.length===0?'<div style="color:var(--muted);font-size:13px;">No clients yet — add your first!</div>':D.revenue.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);"><div><div style="font-size:14px;font-weight:600;">${esc(r.client_name)}</div><div style="font-size:12px;color:var(--muted);">${esc(r.service_type)} · Since ${r.start_date||'—'}</div></div><div style="display:flex;align-items:center;gap:12px;"><span class="badge" style="background:${r.status==='active'?'#D1FAE5':'#F1F5F9'};color:${r.status==='active'?'#065F46':'#64748B'}">${esc(r.status)}</span><strong style="font-size:16px;">${fmt(r.monthly_value)}</strong><button class="btn-sm" onclick="delRev('${r.id}')">✕</button></div></div>`).join('');
   const total=D.revenue.filter(r=>r.status==='active').reduce((s,r)=>s+Number(r.monthly_value),0);
   const ctx=document.getElementById('rev-chart');
   if(ctx){
@@ -2438,7 +2467,10 @@ function restoreActiveTab() {
 }
 
 loadAll().then(restoreActiveTab);
-setInterval(loadAll, 60000);
+// Only refetch on the 60s timer while the tab is actually visible — skip
+// background tabs to cut needless Supabase calls, and refresh once on return.
+setInterval(() => { if(document.visibilityState === 'visible') loadAll(); }, 60000);
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') loadAll(); });
 </script>
 </body>
 </html>
