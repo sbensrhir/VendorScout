@@ -1470,12 +1470,12 @@ function renderContentTab() {
       </div>`).join('');
 
   // All posts table — status filter + period filter
-  let tableData = D.content.slice().sort((a,b)=>b.post_date>a.post_date?1:-1);
+  let tableData = D.content.slice().sort((a,b)=>a.post_date>b.post_date?1:-1);
   if(statusFilter!=='all') tableData = tableData.filter(c=>c.status===statusFilter);
   if(statusFilter==='published'||statusFilter==='all') {
     const nonPub = tableData.filter(c=>c.status!=='published');
     const pubFiltered = filterByPeriod(tableData.filter(c=>c.status==='published'));
-    tableData = [...nonPub, ...pubFiltered].sort((a,b)=>b.post_date>a.post_date?1:-1);
+    tableData = [...nonPub, ...pubFiltered].sort((a,b)=>a.post_date>b.post_date?1:-1);
   }
 
   document.getElementById('content-tbody').innerHTML=tableData.length===0
