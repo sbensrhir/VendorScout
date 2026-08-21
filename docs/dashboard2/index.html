@@ -153,6 +153,7 @@
     <button class="nav-tab" onclick="showTab('goals',this)">Goals</button>
     <button class="nav-tab" onclick="showTab('wbr',this)">Weekly Bridge</button>
     <button class="nav-tab" onclick="showTab('knowledge',this)">Knowledge</button>
+    <button class="nav-tab" onclick="showTab('news',this)">News</button>
   </div>
   <select id="mobile-tab-select" onchange="showTab(this.value,null)">
     <option value="home">🏠 Home</option>
@@ -163,6 +164,7 @@
     <option value="goals">Goals</option>
     <option value="wbr">Weekly Bridge</option>
     <option value="knowledge">Knowledge</option>
+    <option value="news">News</option>
   </select>
   <div style="display:flex;align-items:center;gap:12px;">
     <a href="../content-strategy/" target="_blank" style="color:var(--gold);text-decoration:none;font-size:13px;font-weight:500;padding:6px 12px;border:1px solid rgba(200,169,122,0.3);border-radius:6px;white-space:nowrap;">✏️ Content Strategy ↗</a>
@@ -662,6 +664,21 @@
   </div>
 </div>
 
+<!-- NEWS -->
+<div id="tab-news" class="page">
+  <div class="card">
+    <div class="section-header">
+      <div class="section-title">Amazon AU / APAC &amp; Australian beauty retail news</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="news-updated" style="font-size:11px;color:var(--muted);"></span>
+        <button class="btn-sm" onclick="loadNews(true)">🔄 Refresh</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:1rem;">Pulled from your Google Alerts RSS feeds. Cached for an hour between refreshes to stay within free API limits.</div>
+    <div id="news-list"><div class="loading">Loading...</div></div>
+  </div>
+</div>
+
 <!-- TRAINING MODAL -->
 <div class="modal-overlay" id="m-training">
   <div class="modal">
@@ -1036,6 +1053,7 @@ function showTab(name, btn) {
   if(name==='signals') renderSigTable();
   if(name==='goals') { renderGoals(); loadPastRefs(); document.getElementById('current-week-label').textContent = weekStart(); }
   if(name==='knowledge') renderKnowledge();
+  if(name==='news') loadNews(false);
   if(name==='wbr') initWBR();
 }
 
@@ -2087,6 +2105,95 @@ async function loadWBRHistory() {
       ${r.commitment_1?`<div style="font-size:12px;color:var(--muted);"><strong style="color:var(--gold);">🎯</strong> ${[r.commitment_1,r.commitment_2,r.commitment_3].filter(Boolean).join(' · ')}</div>`:''}
     </div>`;
   }).join('');
+}
+
+// NEWS TAB — Google Alerts RSS feeds, read client-side via rss2json (handles CORS
+// + parsing). No backend of our own needed. Results are cached in localStorage
+// for an hour so repeat tab-opens/page-loads don't burn the free API quota.
+const NEWS_FEEDS = [
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/2708051861823655843', tag:'Amazon'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/10824980434857170620', tag:'Amazon'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/16404708581557425957', tag:'Amazon'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/16404708581557424866', tag:'Amazon'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/15390057326118556501', tag:'Amazon'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/15390057326118556552', tag:'Amazon'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/16404708581557427212', tag:'Beauty Retail'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/15390057326118559092', tag:'Beauty Retail'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/15390057326118559183', tag:'Beauty Retail'},
+  {url:'https://www.google.com/alerts/feeds/02126382969977157510/15390057326118557250', tag:'Beauty Brands'},
+];
+let newsData = [];
+
+async function loadNews(force) {
+  const cacheKey = 'vs-news-cache';
+  const cacheTtlMs = 60 * 60 * 1000; // 1 hour
+  if(!force) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if(cached && (Date.now() - cached.ts) < cacheTtlMs) {
+        newsData = cached.items;
+        renderNews(0, new Date(cached.ts));
+        return;
+      }
+    } catch(e) {}
+  }
+  const listEl = document.getElementById('news-list');
+  if(listEl) listEl.innerHTML = '<div class="loading">Loading news...</div>';
+
+  const results = await Promise.allSettled(NEWS_FEEDS.map(f =>
+    fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url))
+      .then(r => r.json())
+      .then(data => (data.items || []).map(it => ({
+        title: (it.title || '').replace(/<[^>]+>/g, ''),
+        link: it.link,
+        date: it.pubDate,
+        tag: f.tag
+      })))
+  ));
+
+  let items = [];
+  let failedCount = 0;
+  results.forEach(r => {
+    if(r.status === 'fulfilled') items = items.concat(r.value);
+    else failedCount++;
+  });
+
+  const seen = new Set();
+  items = items.filter(it => {
+    if(!it.link || seen.has(it.link)) return false;
+    seen.add(it.link);
+    return true;
+  });
+  items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+  items = items.slice(0, 60);
+
+  newsData = items;
+  try { localStorage.setItem(cacheKey, JSON.stringify({ts: Date.now(), items})); } catch(e) {}
+  renderNews(failedCount, new Date());
+}
+
+function renderNews(failedCount, updatedAt) {
+  const el = document.getElementById('news-list');
+  if(!el) return;
+  const updEl = document.getElementById('news-updated');
+  if(updEl && updatedAt) updEl.textContent = 'Updated ' + updatedAt.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+
+  const tagColors = {'Amazon':'#DBEAFE:#1D4ED8', 'Beauty Retail':'#FCE7F3:#9D174D', 'Beauty Brands':'#D1FAE5:#065F46'};
+  if(newsData.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:1rem 0;">No news yet — click Refresh, or these searches may not have recent matches.</div>';
+    return;
+  }
+  el.innerHTML = newsData.map(it => {
+    const [bg, col] = (tagColors[it.tag] || '#F1F5F9:#64748B').split(':');
+    const dateStr = it.date ? new Date(it.date).toLocaleDateString('en-AU', {day:'numeric', month:'short'}) : '';
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+        <span class="badge" style="background:${bg};color:${col};">${esc(it.tag)}</span>
+        ${dateStr ? `<span style="font-size:11px;color:var(--muted);">${esc(dateStr)}</span>` : ''}
+      </div>
+      <a href="${esc(it.link)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:500;color:var(--text);text-decoration:none;">${esc(it.title)}</a>
+    </div>`;
+  }).join('') + (failedCount ? `<div style="font-size:11px;color:var(--muted);padding-top:8px;">${failedCount} source(s) didn't load this time — try Refresh.</div>` : '');
 }
 
 // KNOWLEDGE TAB
