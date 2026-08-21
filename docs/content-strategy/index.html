@@ -587,6 +587,7 @@ function switchTab(name, btn) {
     });
   }
   if(['p1a','p1b','p1c','p2a','p2b','p2c','p2d'].includes(name)) renderSubPillar(name);
+  try { localStorage.setItem('vs-content-strategy-active-tab', name); } catch(e) {}
 }
 
 async function loadAll() {
@@ -810,7 +811,13 @@ async function deleteTopic(id) {
   await loadAll();
 }
 
-loadAll();
+function restoreActiveTab() {
+  let saved = null;
+  try { saved = localStorage.getItem('vs-content-strategy-active-tab'); } catch(e) {}
+  if(saved && saved!=='overview' && document.getElementById('panel-'+saved)) switchTab(saved, null);
+}
+
+loadAll().then(restoreActiveTab);
 </script>
 </body>
 </html>
