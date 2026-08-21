@@ -1451,7 +1451,8 @@ function renderContentTab() {
   }
 
   // Upcoming posts — always show all, never filtered by period
-  const upcoming = D.content.filter(c=>c.status!=='published');
+  const upcoming = D.content.filter(c=>c.status!=='published')
+    .sort((a,b)=>(a.post_date||'9999')>(b.post_date||'9999')?1:-1);
   document.getElementById('upcoming-posts').innerHTML=upcoming.length===0
     ?'<div style="color:var(--muted);font-size:13px;padding:8px 0;">No upcoming posts — add your next post!</div>'
     :upcoming.map(c=>`<div style="padding:10px 0;border-bottom:1px solid var(--border);">
