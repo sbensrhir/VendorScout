@@ -2125,18 +2125,28 @@ const NEWS_FEEDS = [
 let newsData = [];
 
 // Weighted keyword scoring so the most business-relevant stories can be
-// surfaced first — no AI call needed, just simple keyword matching against
-// what actually matters for an Amazon AU beauty consultancy.
-const NEWS_KEYWORDS_HIGH = ['acquisition','acquire','acquired','merger','funding','investment','ipo','buyout','partnership'];
-const NEWS_KEYWORDS_MED = ['launch','expansion','prime','beauty page','fees','policy','advertising','pricing','ranking','best sellers','vendor','seller','revenue'];
+// surfaced first — no AI call needed, just keyword matching against what
+// actually matters for an Amazon AU beauty consultancy. A headline first has
+// to pass a relevance gate (mention Amazon, Australia, or a named brand) —
+// otherwise generic business news (funding rounds, mergers, etc. from
+// completely unrelated industries/countries) can score high on keywords
+// alone despite having nothing to do with this business.
 const NEWS_BRANDS = ['mecca','sephora','chemist warehouse','adore beauty','cerave','la roche-posay','cosrx','anua','medicube',"paula's choice",'biodance','w cosmetics'];
+const NEWS_ANCHOR_TERMS = ['amazon','australia','australian', ...NEWS_BRANDS];
+const NEWS_KEYWORDS_HIGH = ['acquisition','acquire','acquired','merger','funding','investment','ipo','buyout','partnership','prime day','fulfilment centre','fulfilment center','fulfillment centre','fulfillment center','distribution centre','distribution center','q1 results','q2 results','q3 results','q4 results'];
+const NEWS_KEYWORDS_MED = ['launch','expansion','expands','prime','beauty page','fees','policy','advertising','pricing','ranking','best sellers','vendor','seller','revenue','earnings','quarterly results','half-year results','annual results','warehouse','fc'];
 
 function scoreNewsItem(title) {
   const t = (title || '').toLowerCase();
-  let score = 0;
-  NEWS_KEYWORDS_HIGH.forEach(k => { if(t.includes(k)) score += 3; });
-  NEWS_KEYWORDS_MED.forEach(k => { if(t.includes(k)) score += 2; });
-  NEWS_BRANDS.forEach(k => { if(t.includes(k)) score += 2; });
+  const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const has = term => new RegExp('\\b' + escRe(term) + '\\b', 'i').test(t);
+
+  if(!NEWS_ANCHOR_TERMS.some(has)) return 0; // not about Amazon/AU/a named brand — never a top pick
+
+  let score = 1; // base point for passing the relevance gate
+  NEWS_KEYWORDS_HIGH.forEach(k => { if(has(k)) score += 3; });
+  NEWS_KEYWORDS_MED.forEach(k => { if(has(k)) score += 2; });
+  NEWS_BRANDS.forEach(k => { if(has(k)) score += 2; });
   return score;
 }
 
