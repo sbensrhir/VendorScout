@@ -2124,6 +2124,22 @@ const NEWS_FEEDS = [
 ];
 let newsData = [];
 
+// Weighted keyword scoring so the most business-relevant stories can be
+// surfaced first — no AI call needed, just simple keyword matching against
+// what actually matters for an Amazon AU beauty consultancy.
+const NEWS_KEYWORDS_HIGH = ['acquisition','acquire','acquired','merger','funding','investment','ipo','buyout','partnership'];
+const NEWS_KEYWORDS_MED = ['launch','expansion','prime','beauty page','fees','policy','advertising','pricing','ranking','best sellers','vendor','seller','revenue'];
+const NEWS_BRANDS = ['mecca','sephora','chemist warehouse','adore beauty','cerave','la roche-posay','cosrx','anua','medicube',"paula's choice",'biodance','w cosmetics'];
+
+function scoreNewsItem(title) {
+  const t = (title || '').toLowerCase();
+  let score = 0;
+  NEWS_KEYWORDS_HIGH.forEach(k => { if(t.includes(k)) score += 3; });
+  NEWS_KEYWORDS_MED.forEach(k => { if(t.includes(k)) score += 2; });
+  NEWS_BRANDS.forEach(k => { if(t.includes(k)) score += 2; });
+  return score;
+}
+
 async function loadNews(force) {
   const cacheKey = 'vs-news-cache';
   const cacheTtlMs = 60 * 60 * 1000; // 1 hour
@@ -2143,12 +2159,10 @@ async function loadNews(force) {
   const results = await Promise.allSettled(NEWS_FEEDS.map(f =>
     fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url))
       .then(r => r.json())
-      .then(data => (data.items || []).map(it => ({
-        title: (it.title || '').replace(/<[^>]+>/g, ''),
-        link: it.link,
-        date: it.pubDate,
-        tag: f.tag
-      })))
+      .then(data => (data.items || []).map(it => {
+        const title = (it.title || '').replace(/<[^>]+>/g, '');
+        return {title, link: it.link, date: it.pubDate, tag: f.tag, score: scoreNewsItem(title)};
+      }))
   ));
 
   let items = [];
@@ -2183,17 +2197,38 @@ function renderNews(failedCount, updatedAt) {
     el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:1rem 0;">No news yet — click Refresh, or these searches may not have recent matches.</div>';
     return;
   }
-  el.innerHTML = newsData.map(it => {
+
+  const newsCard = (it, highlight) => {
     const [bg, col] = (tagColors[it.tag] || '#F1F5F9:#64748B').split(':');
     const dateStr = it.date ? new Date(it.date).toLocaleDateString('en-AU', {day:'numeric', month:'short'}) : '';
-    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);${highlight ? 'border-left:3px solid var(--gold);padding-left:10px;background:#FFFBEB;border-radius:0 6px 6px 0;' : ''}">
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px;">
+        ${highlight ? '<span style="font-size:12px;">⭐</span>' : ''}
         <span class="badge" style="background:${bg};color:${col};">${esc(it.tag)}</span>
         ${dateStr ? `<span style="font-size:11px;color:var(--muted);">${esc(dateStr)}</span>` : ''}
       </div>
       <a href="${esc(it.link)}" target="_blank" rel="noopener" style="font-size:14px;font-weight:500;color:var(--text);text-decoration:none;">${esc(it.title)}</a>
     </div>`;
-  }).join('') + (failedCount ? `<div style="font-size:11px;color:var(--muted);padding-top:8px;">${failedCount} source(s) didn't load this time — try Refresh.</div>` : '');
+  };
+
+  const topPicks = newsData
+    .filter(it => it.score >= 3)
+    .sort((a, b) => b.score - a.score || new Date(b.date || 0) - new Date(a.date || 0))
+    .slice(0, 5);
+  const topLinks = new Set(topPicks.map(it => it.link));
+  const rest = newsData.filter(it => !topLinks.has(it.link));
+
+  let html = '';
+  if(topPicks.length > 0) {
+    html += `<div style="margin-bottom:1.5rem;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">⭐ Top picks for your business</div>
+      ${topPicks.map(it => newsCard(it, true)).join('')}
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">All headlines</div>`;
+  }
+  html += rest.map(it => newsCard(it, false)).join('');
+  html += failedCount ? `<div style="font-size:11px;color:var(--muted);padding-top:8px;">${failedCount} source(s) didn't load this time — try Refresh.</div>` : '';
+  el.innerHTML = html;
 }
 
 // KNOWLEDGE TAB
